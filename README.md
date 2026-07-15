@@ -56,15 +56,16 @@ frontend/  Vue 3 前端（src/views 页面、src/stores 状态、src/api 接口�
 pipeline/  AI 流水线（Phase 2 实现：arXiv 抓取 + DeepSeek 抽取）
 ```
 
-## 当前进度（Phase 0）
+## 当前进度（Phase 1）
 
-- ✅ 项目骨架 + git
-- ✅ Paper 数据模型（SQLModel + 全部枚举 + JSON 列）
-- ✅ FastAPI CRUD（list / get / create）
-- ✅ Vue 列表页（Element Plus 表格 + Pinia + Router）
-- ✅ 前后端联调跑通
+- ✅ Phase 0: 项目骨架 + Paper 模型 + list/get/create + 列表页
+- ✅ Phase 1: 列表筛选条（task_type/机制三维度/年份/阅读/质量）+ 关键词搜索 + 排序 + 分页
+- ✅ Phase 1: 详情页全字段卡片（5 分组展示）
+- ✅ Phase 1: PATCH 更新端点 + 编辑表单（4 tab 分组编辑）
+- ✅ Phase 1: 新增论文表单 Dialog
+- ✅ Phase 1: read_status / personal_notes / curation_status 编辑
 
-下一步（Phase 1）：列表筛选条、详情页全字段卡片、update 端点 + 编辑表单。
+下一步（Phase 2）：AI 流水线（arXiv 抓取 + DeepSeek 抽取 + 自动入库）。
 
 ## 技术决策
 

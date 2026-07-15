@@ -11,7 +11,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { papersApi } from '../api/papers'
 
-// defineStore('papers', () => {...})：
+// 定义Store('papers', () => {...})：
 //   第一个参数是 store 的唯一 id（调试用）
 //   第二个参数是 setup 函数，返回 state 和 action
 export const usePapersStore = defineStore('papers', () => {
@@ -22,16 +22,53 @@ export const usePapersStore = defineStore('papers', () => {
   const total = ref(0)       // 总数（分页用）
   const loading = ref(false) // 加载中标志，控制表格 loading 动画
 
+  // filters：当前筛选条件，用 reactive 对象统一管理。
+  // 所有字段都给默认值（null 或空字符串表示"不筛选"）。
+  // 列表页的筛选条控件双向绑定到这个对象，改了就触发 fetchList。
+  const filters = ref({
+    q: '',                              // 关键词搜索
+    task_type: null,                    // 任务类型（多选值域里的一个，null=不筛选）
+    attribute_selection: null,          // 机制维度一
+    distribution_strategy: null,        // 机制维度二
+    injection_pipeline: null,           // 机制维度三
+    year: null,                         // 年份
+    read_status: null,                  // 阅读状态
+    curation_status: null,             // 数据质量状态
+    sort_by: 'added_at',              // 排序字段
+    order: 'desc',                     // 排序方向
+  })
+
+  // 分页状态
+  const limit = ref(20)      // 每页数量
+  const offset = ref(0)       // 当前页起始位置（0=第一页）
+
   // ---- action（动作）----
   /**
    * 拉取论文列表。
-   * @param {Object} params - { q?, limit?, offset? }
-   * 使用场景：列表页组件 onMounted 时调用。
+   * @param {Object} extraParams - 额外覆盖参数（比如手动指定 offset 翻页）
+   * 使用场景：列表页 onMounted 时调用，筛选条件变化时调用。
    */
-  async function fetchList(params = {}) {
+  async function fetchList(extraParams = {}) {
     loading.value = true
     try {
-      const data = await papersApi.list(params)
+      // 构造请求参数：把 filters 和分页参数合并。
+      // 用展开运算符 ... 把 filters 的所有字段摊平到新对象。
+      // extraParams 在最后，会覆盖前面同名字段（比如 extraParams.offset 覆盖分页）。
+      const params = {
+        ...filters.value,
+        limit: limit.value,
+        offset: offset.value,
+        ...extraParams,
+      }
+
+      // 清理参数：null / 空字符串的字段不传给后端（避免后端把空字符串当筛选条件）。
+      // Object.fromEntries + filter：遍历 params，只保留有值的字段。
+      // Object.entries(obj) 把对象转成 [key, value] 数组，filter 过滤，fromEntries 转回对象。
+      const cleanParams = Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== null && v !== '' && v !== undefined)
+      )
+
+      const data = await papersApi.list(cleanParams)
       items.value = data.items
       total.value = data.total
     } finally {
@@ -40,6 +77,39 @@ export const usePapersStore = defineStore('papers', () => {
     }
   }
 
+  /**
+   * 重置筛选条件到默认值并重新加载。
+   * 使用场景：用户点"重置筛选"按钮。
+   */
+  function resetFilters() {
+    filters.value = {
+      q: '',
+      task_type: null,
+      attribute_selection: null,
+      distribution_strategy: null,
+      injection_pipeline: null,
+      year: null,
+      read_status: null,
+      curation_status: null,
+      sort_by: 'added_at',
+      order: 'desc',
+    }
+    offset.value = 0
+    fetchList()
+  }
+
+  /**
+   * 翻页——更新 offset 并重新加载。
+   * @param {number} newOffset - 新的起始位置
+   */
+  function changePage(newOffset) {
+    offset.value = newOffset
+    fetchList()
+  }
+
   // 返回 state 和 action，模板/store 外部能访问到。
-  return { items, total, loading, fetchList }
+  return {
+    items, total, loading, filters, limit, offset,
+    fetchList, resetFilters, changePage,
+  }
 })

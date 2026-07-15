@@ -10,7 +10,8 @@ Pydantic 请求/响应 schema（与 SQLModel model 分离）。
 继承结构：
   PaperBase（公共字段）
     ├── PaperCreate（创建用，不含 id/added_at 等后端生成字段）
-    └── PaperRead（读取用，含全部字段）
+    ├── PaperRead（读取用，含全部字段）
+    └── PaperUpdate（部分更新用，所有字段可选，PATCH 语义）
 """
 from datetime import date, datetime
 from typing import Optional, List
@@ -33,8 +34,9 @@ ALLOWED_ROBUSTNESS = {r.value for r in RobustnessTarget}
 class PaperBase(BaseModel):
     """论文公共字段——创建和读取都需要的字段。
 
-    注意：这里故意不放 id / added_at / curation_status 等后端生成的字段，
+    注意：这里故意不放 id / added_at 等后端生成的字段，
     它们只在 PaperRead 里出现，避免创建接口误传。
+    但 read_status / curation_status 放在这里，因为创建时可以指定（不指定走默认值）。
     """
     arxiv_id: Optional[str] = None
     doi: Optional[str] = None
@@ -65,6 +67,11 @@ class PaperBase(BaseModel):
     extra_metrics: Optional[dict] = None
     code_url: Optional[str] = None
 
+    # 个人字段——放这里让创建和编辑都能改
+    read_status: ReadStatus = ReadStatus.unread
+    personal_notes: Optional[str] = None
+    curation_status: CurationStatus = CurationStatus.auto
+
     # field_validator：Pydantic v2 的字段校验装饰器。
     # 在数据被接受前先校验，非法值直接报 422 错误给前端。
     # @field_validator("字段名")：校验单个字段；传列表可校验多个。
@@ -92,7 +99,7 @@ class PaperCreate(PaperBase):
     """创建论文用的 schema。
 
     继承 PaperBase 的全部字段，额外加 source（默认 manual）。
-    不含 id / added_at / curation_status 等——这些后端自动生成，不该由前端传。
+    不含 id / added_at / last_reviewed_at——这些后端自动生成。
     """
     source: SourceType = SourceType.manual
 
@@ -105,9 +112,6 @@ class PaperRead(PaperBase):
     id: int
     source: SourceType
     added_at: datetime
-    read_status: ReadStatus
-    personal_notes: Optional[str] = None
-    curation_status: CurationStatus
     last_reviewed_at: Optional[datetime] = None
 
     # Pydantic v2 配置：from_attributes=True 让 Pydantic 能从"任意对象"按属性名读取字段，
@@ -116,6 +120,73 @@ class PaperRead(PaperBase):
     # （Pydantic v1 里这个配置叫 orm_mode = True，v2 改名了，抄旧教程会踩坑）
     class Config:
         from_attributes = True
+
+
+class PaperUpdate(BaseModel):
+    """
+    部分更新论文用的 schema（PATCH 语义）。
+
+    设计取舍——为什么所有字段都 Optional？
+        PUT 语义要求传全部字段（没传的会被置空），对"只改一个字段"场景不友好。
+        PATCH 语义是"只改传了的字段，没传的保持不变"。
+        实现 PATCH 语义的标准做法：所有字段都设成 Optional[...] = None，
+        后端只更新"前端显式传了的字段"（非 None 的字段）。
+
+    所有字段都可选，连 title 这种原本必填的也变可选——
+    因为编辑时你不一定要改它，不改就不传。
+    """
+    arxiv_id: Optional[str] = None
+    doi: Optional[str] = None
+    title: Optional[str] = None
+    authors: Optional[List[str]] = None
+    venue: Optional[str] = None
+    pub_date: Optional[date] = None
+    abstract: Optional[str] = None
+    pdf_url: Optional[str] = None
+    method_summary: Optional[str] = None
+    key_contributions: Optional[List[str]] = None
+
+    task_type: Optional[List[str]] = None
+    attribute_selection: Optional[AttributeSelection] = None
+    distribution_strategy: Optional[DistributionStrategy] = None
+    injection_pipeline: Optional[InjectionPipeline] = None
+    robustness_targets: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
+
+    capacity: Optional[str] = None
+    datasets_used: Optional[List[str]] = None
+    baselines_compared: Optional[List[str]] = None
+    psnr: Optional[float] = None
+    ssim: Optional[float] = None
+    bit_accuracy: Optional[float] = None
+    extra_metrics: Optional[dict] = None
+    code_url: Optional[str] = None
+
+    read_status: Optional[ReadStatus] = None
+    personal_notes: Optional[str] = None
+    curation_status: Optional[CurationStatus] = None
+
+    @field_validator("task_type")
+    @classmethod
+    def validate_task_type(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """校验 task_type，允许 None（不更新时跳过）。"""
+        if v is None:
+            return None
+        for item in v:
+            if item not in ALLOWED_TASK_TYPES:
+                raise ValueError(f"非法 task_type 值: {item}，合法值: {ALLOWED_TASK_TYPES}")
+        return v
+
+    @field_validator("robustness_targets")
+    @classmethod
+    def validate_robustness(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """校验 robustness_targets，允许 None。"""
+        if v is None:
+            return None
+        for item in v:
+            if item not in ALLOWED_ROBUSTNESS:
+                raise ValueError(f"非法 robustness_target 值: {item}，合法值: {ALLOWED_ROBUSTNESS}")
+        return v
 
 
 class PaperListResponse(BaseModel):
