@@ -29,10 +29,14 @@ cd backend
 ```bash
 cd frontend
 
-# 启动开发服务器（依赖已装在 workspace，通过 node_modules 软链接解析）
-PATH=/Users/kang/.workbuddy/binaries/node/versions/22.22.2/bin:$PATH \
-  /Users/kang/.workbuddy/binaries/node/versions/22.22.2/bin/npx vite --port 5173
+# 安装依赖（首次，用本地 nvm 的 npm）
+/Users/kang/.nvm/versions/node/v24.18.0/bin/npm install
+
+# 启动开发服务器
+/Users/kang/.nvm/versions/node/v24.18.0/bin/npx vite --port 5173
 ```
+
+> 也可以先 `nvm use 24` 激活环境，再直接 `npm install` / `npx vite --port 5173`。
 
 验证：浏览器开 `localhost:5173/papers` → 看到论文列表表格。
 
