@@ -18,3 +18,9 @@ pydantic==2.10.4
 # python-multipart：FastAPI 处理表单（Form）/文件上传（UploadFile）的依赖
 # Phase 0 暂不用，但 Phase 1 手动录入表单会用到，提前装上
 python-multipart==0.0.20
+
+# ===== Phase 2: AI 流水线 =====
+# requests：同步 HTTP 客户端，调 arXiv API（arXiv 返回 Atom XML，不用 async）
+requests==2.34.2
+# openai：OpenAI 官方 SDK，DeepSeek 兼容 OpenAI API 格式，直接用这个 SDK 调 DeepSeek
+openai==2.45.0

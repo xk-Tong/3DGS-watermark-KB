@@ -56,16 +56,29 @@ frontend/  Vue 3 前端（src/views 页面、src/stores 状态、src/api 接口�
 pipeline/  AI 流水线（Phase 2 实现：arXiv 抓取 + DeepSeek 抽取）
 ```
 
-## 当前进度（Phase 1）
+## 当前进度（Phase 2）
 
 - ✅ Phase 0: 项目骨架 + Paper 模型 + list/get/create + 列表页
-- ✅ Phase 1: 列表筛选条（task_type/机制三维度/年份/阅读/质量）+ 关键词搜索 + 排序 + 分页
-- ✅ Phase 1: 详情页全字段卡片（5 分组展示）
-- ✅ Phase 1: PATCH 更新端点 + 编辑表单（4 tab 分组编辑）
-- ✅ Phase 1: 新增论文表单 Dialog
-- ✅ Phase 1: read_status / personal_notes / curation_status 编辑
+- ✅ Phase 1: 列表筛选 + 详情页 + 编辑表单 + 新增表单
+- ✅ Phase 2: arXiv API 客户端（关键词搜索 + id_list 批量 + Atom XML 解析）
+- ✅ Phase 2: DeepSeek LLM 集成（相关性过滤 + 结构化抽取 + taxonomy prompt）
+- ✅ Phase 2: 流水线编排（arXiv→去重→过滤→抽取→入库，BackgroundTasks 后台执行）
+- ✅ Phase 2: 前端检索面板（触发按钮 + 轮询状态 + 结果展示）
+- ⏳ Phase 2 待测: 配置 DEEPSEEK_API_KEY 后测试完整流水线
 
-下一步（Phase 2）：AI 流水线（arXiv 抓取 + DeepSeek 抽取 + 自动入库）。
+### 配置 DeepSeek API Key
+
+流水线的 LLM 抽取需要 DeepSeek API key（从 https://platform.deepseek.com/ 获取）：
+
+```bash
+export DEEPSEEK_API_KEY='sk-你的key'
+# 然后重启后端
+cd backend && /opt/miniconda3/envs/3dgsw_kb/bin/python -m uvicorn app.main:app --reload --port 8000
+```
+
+配好后在前端列表页点"检索新论文"按钮即可触发完整流水线。
+
+下一步（Phase 3）：可视化（时间线/机制分布热力图/攻击覆盖矩阵/对比视图）。
 
 ## 技术决策
 

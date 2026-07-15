@@ -7,6 +7,9 @@
       <el-button type="primary" class="add-btn" @click="createVisible = true">+ 新增论文</el-button>
     </div>
 
+    <!-- AI 检索面板——触发 arXiv 抓取 + LLM 抽取 -->
+    <PipelinePanel @updated="store.fetchList()" />
+
     <!-- 筛选条容器 -->
     <el-card class="filter-card" shadow="never">
       <el-form :inline="true" :model="store.filters" label-width="auto">
@@ -154,6 +157,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePapersStore } from '../stores/papers'
 import PaperCreateDialog from '../components/PaperCreateDialog.vue'
+import PipelinePanel from '../components/PipelinePanel.vue'
 
 // useRouter：Vue Router 的编程式导航 hook，拿到 router 实例用于跳转。
 const router = useRouter()

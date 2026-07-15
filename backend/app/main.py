@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import create_db_and_tables
-from .api import papers
+from .api import papers, pipeline
 from .config import settings
 
 
@@ -57,8 +57,11 @@ app.add_middleware(
 )
 
 # include_router：把 papers 路由挂到 app 上，统一加 /api 前缀。
-# 最终端点：GET /api/papers、GET /api/papers/{id}、POST /api/papers
+# 最终端点：GET /api/papers、GET /api/papers/{id}、POST /api/papers、PATCH /api/papers/{id}
 app.include_router(papers.router, prefix="/api")
+
+# pipeline 路由：POST /api/pipeline/run（触发检索）、GET /api/pipeline/status（查状态）
+app.include_router(pipeline.router, prefix="/api")
 
 
 @app.get("/api/health")
