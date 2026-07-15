@@ -68,15 +68,19 @@ pipeline/  AI 流水线（Phase 2 实现：arXiv 抓取 + DeepSeek 抽取）
 
 ### 配置 DeepSeek API Key
 
-流水线的 LLM 抽取需要 DeepSeek API key（从 https://platform.deepseek.com/ 获取）：
+流水线的 LLM 抽取需要 DeepSeek API key（从 https://platform.deepseek.com/ 获取）。
+
+**推荐方式：`.env` 文件（一次配置，永久生效）**
 
 ```bash
-export DEEPSEEK_API_KEY='sk-你的key'
-# 然后重启后端
-cd backend && /opt/miniconda3/envs/3dgsw_kb/bin/python -m uvicorn app.main:app --reload --port 8000
+cd backend
+cp .env.example .env          # 复制模板
+# 然后用编辑器打开 .env，把 sk-在此填入你的key 换成你的真实 key
 ```
 
-配好后在前端列表页点"检索新论文"按钮即可触发完整流水线。
+`.env` 文件已 gitignore，不会被提交，安全。后端启动时会自动读取（通过 python-dotenv 的 `load_dotenv()`），无需每次 `export`。
+
+配好后启动后端，在前端列表页点"检索新论文"按钮即可触发完整流水线。
 
 下一步（Phase 3）：可视化（时间线/机制分布热力图/攻击覆盖矩阵/对比视图）。
 

@@ -7,11 +7,22 @@
 """
 from pathlib import Path
 
+# dotenv：从 .env 文件加载环境变量。
+# .env 文件放敏感配置（如 API key），不进 git（已 gitignore）。
+# load_dotenv() 会在启动时读取 backend/.env，把里面的 KEY=VALUE 注入 os.environ，
+# 之后 os.environ.get("DEEPSEEK_API_KEY") 就能拿到值。
+# 必须在 import 其他模块之前调用，确保环境变量先加载。
+from dotenv import load_dotenv
+
 # BASE_DIR 指向 backend/ 目录。
 # __file__ 是当前文件（config.py）的路径，在 app/ 目录里。
 # .resolve().parent 拿到 app/，再 .parent 拿到 backend/。
 # 用 Path 而非字符串拼接，自动处理跨平台路径分隔符（macOS/Linux 用 /，Windows 用 \）。
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 加载 .env 文件（路径：backend/.env）。
+# .env 文件不存在时不报错，静默跳过——这样没配 key 也能启动后端（只是流水线 LLM 步骤会报错）。
+load_dotenv(BASE_DIR / ".env")
 
 
 class settings:

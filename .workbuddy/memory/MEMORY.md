@@ -17,6 +17,8 @@
 - AI 流水线触发方式：**手动触发**（Web UI 按钮），不用 cron。检索时按"距上次成功抓取"为日期范围，避免漏论文。
 - 质量门：自动入库 + curation_status=auto 徽章 + 统计隔离（auto 不进聚合视图）+ 异步人工复核（auto→reviewed→verified）
 - LLM 抽取只负责分类字段和摘要性内容；title/authors/abstract/pub_date/arxiv_id 由 arXiv API 直接给，不进 LLM
+- **LLM 只读 title+abstract，不读 PDF**。摘要够判断分类字段，读全文成本高 10-50 倍且 PDF 解析乱码。单篇成本约 ¥0.003（DeepSeek-chat），200 篇约 ¥0.6。
+- DeepSeek API key 通过 `backend/.env` 文件配置（python-dotenv load_dotenv 自动读取），不用每次 export。.env 已 gitignore，.env.example 作为模板被 git 跟踪。
 - 更新已有论文时只覆盖 curation_status=auto 的字段，reviewed/verified 的人工修正不被覆盖
 - Prompt 必须附综述 taxonomy 定义 + few-shot 示例，否则分类会乱
 - 冷启动：从综述参考文献列表种子 → 解析 arXiv ID → 批量 API 抓取 → 走同一抽取流水线；非 arXiv 论文走 DOI 查询或手动录入
