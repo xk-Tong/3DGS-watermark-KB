@@ -3,7 +3,7 @@ FastAPI 应用入口——创建 app 实例、配置中间件、挂载路由、�
 
 启动命令：
     cd backend
-    /Users/kang/.workbuddy/binaries/python/envs/default/bin/python -m uvicorn app.main:app --reload --port 8000
+    /opt/miniconda3/envs/3dgsw_kb/bin/python -m uvicorn app.main:app --reload --port 8000
 
     app.main:app 的含义：app/main.py 文件里的 app 变量。
     --reload：代码改动后自动重启，开发期用。生产部署去掉。

@@ -9,6 +9,7 @@
 ### 技术栈（分支 2）
 - 前端：Vue 3 + Vite（用户有少量 Vue/FastAPI 基础）
 - 后端：FastAPI（Python 单语言贯穿后端 + AI 流水线）
+- Python 环境：**本地 miniconda 环境 `3dgsw_kb`**（Python 3.12.13，/opt/miniconda3/envs/3dgsw_kb/bin/python）。用户明确不用 workbuddy managed venv，用本地 miniconda 专用环境。
 - 数据库：SQLite（单人规模足够）
 - 部署：国内轻量云服务器 2核2G 3M带宽（~60-99 RMB/年）或海外免费机，动手时再定
 - 初期用 IP+端口访问，免备案；后期再考虑域名备案

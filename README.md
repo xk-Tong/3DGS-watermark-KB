@@ -11,13 +11,13 @@
 cd backend
 
 # 安装依赖（首次）
-/Users/kang/.workbuddy/binaries/python/envs/default/bin/pip install -r requirements.txt
+/opt/miniconda3/envs/3dgsw_kb/bin/pip install -r requirements.txt
 
 # 插入种子数据（首次）
-/Users/kang/.workbuddy/binaries/python/envs/default/bin/python -m app.core.seed
+/opt/miniconda3/envs/3dgsw_kb/bin/python -m app.core.seed
 
 # 启动开发服务器
-/Users/kang/.workbuddy/binaries/python/envs/default/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+/opt/miniconda3/envs/3dgsw_kb/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 验证：

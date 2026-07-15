@@ -5,7 +5,7 @@ GuardSplat 是综述里提到的代表性水印方法（扰动球谐系数 SH）
 用真实论文做种子，让 Phase 0 的列表页看起来有意义，不是 "test/test" 占位数据。
 
 运行方式（在 backend/ 目录下）：
-    /Users/kang/.workbuddy/binaries/python/envs/default/bin/python -m app.core.seed
+    /opt/miniconda3/envs/3dgsw_kb/bin/python -m app.core.seed
 
     python -m app.core.seed 的含义：把 app.core.seed 当模块执行。
     用 -m 而非直接 app/core/seed.py，是为了让相对导入（from ..database import ...）能正常工作。
