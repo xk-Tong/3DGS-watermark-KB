@@ -1,0 +1,20 @@
+# ===== Web 框架 =====
+# FastAPI：基于 Starlette + Pydantic 的现代 Python Web 框架，异步、自带 OpenAPI 文档
+fastapi==0.115.6
+# uvicorn[standard]：ASGI 服务器，用来跑 FastAPI。[standard] 附带 httptools/uvloop 性能加速
+uvicorn[standard]==0.34.0
+
+# ===== ORM + 数据库 =====
+# SQLModel：FastAPI 作者 Sebastián Ramírez 写的 ORM，融合 SQLAlchemy + Pydantic
+# 一个类既是数据库表定义，又是 API 的数据校验模型，省掉重复代码
+sqlmodel==0.0.22
+# SQLAlchemy 由 sqlmodel 间接安装，这里不显式列版本，让 sqlmodel 自己选兼容版本
+
+# ===== 数据校验 =====
+# FastAPI 间接依赖 pydantic，显式锁定大版本避免漂移（pydantic v2 性能比 v1 快 5-50 倍）
+pydantic==2.10.4
+
+# ===== 开发期便利 =====
+# python-multipart：FastAPI 处理表单（Form）/文件上传（UploadFile）的依赖
+# Phase 0 暂不用，但 Phase 1 手动录入表单会用到，提前装上
+python-multipart==0.0.20
