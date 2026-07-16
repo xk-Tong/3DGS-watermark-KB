@@ -150,12 +150,16 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { papersApi } from '../api/papers'
+import { useTheme } from '../composables/useTheme'
 import {
   taskTypeOptions, attributeOptions, distributionOptions, injectionOptions,
   robustness2DOptions, robustness3DOptions, readStatusOptions,
   curationStatusOptions, sourceOptions, labelOf,
 } from '../api/options'
 import PaperEditDialog from '../components/PaperEditDialog.vue'
+
+// 详情页用浅色主题（长文阅读舒适）
+useTheme('light')
 
 // useRoute：拿到当前路由信息（含 params 路径参数）。
 // useRouter：拿到 router 实例用于编程式导航（push/back）。

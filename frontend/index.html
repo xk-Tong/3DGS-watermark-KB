@@ -5,11 +5,17 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>3DGS 水印论文库</title>
+    <!-- Google Fonts：Space Grotesk（标题）+ Inter（正文）+ JetBrains Mono（数据）
+         preconnect 提前建 DNS 连接，让字体加载更快 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <!-- Vue 应用挂载点：main.js 里 app.mount('#app') 会把整个 Vue 应用渲染到这个 div 里 -->
     <div id="app"></div>
-    <!-- type="module"：ESM 模块，支持 import/export 语法，浏览器原生支持 -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

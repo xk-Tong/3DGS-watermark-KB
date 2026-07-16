@@ -2,8 +2,10 @@
   <!-- 列表页——Phase 1：筛选条 + 搜索 + 排序 + 分页 -->
   <div class="paper-list-view">
     <div class="header">
-      <h1>3DGS 水印论文库</h1>
-      <span class="subtitle">3D Gaussian Splatting IP Protection Knowledge Base</span>
+      <div class="header-text">
+        <h1 class="page-title">论文库</h1>
+        <p class="page-intro">追踪 3DGS 水印与 IP 保护方向，共 {{ store.total }} 篇</p>
+      </div>
       <div class="header-actions">
         <el-button
           type="warning"
@@ -177,8 +179,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePapersStore } from '../stores/papers'
+import { useTheme } from '../composables/useTheme'
 import PaperCreateDialog from '../components/PaperCreateDialog.vue'
 import PipelinePanel from '../components/PipelinePanel.vue'
+
+// 列表页用浅色主题
+useTheme('light')
 
 // useRouter：Vue Router 的编程式导航 hook，拿到 router 实例用于跳转。
 const router = useRouter()
@@ -329,55 +335,63 @@ function statusLabel(status) {
 </script>
 
 <style scoped>
-/* scoped：样式只作用于当前组件，不泄漏到其他组件 */
 .paper-list-view {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--space-xl) var(--space-lg);
 }
 
 .header {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--space-lg);
 }
 
-.header h1 {
-  font-size: 22px;
-  color: #303133;
+.header-text {
+  flex: 1;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
-.subtitle {
+.page-intro {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-secondary);
 }
 
 .header-actions {
-  float: right;
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
-/* 筛选条卡片：浅色背景，无阴影，紧凑 */
+/* 筛选条卡片 */
 .filter-card {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
 }
 
 .filter-card :deep(.el-form--inline .el-form-item) {
   margin-right: 12px;
   margin-bottom: 8px;
 }
-/* :deep()：穿透 scoped 限制，修改子组件（Element Plus）内部样式。
-   因为 scoped 默认只能改当前组件的元素，改不了 Element Plus 组件内部的 class。 */
 
 .footer {
-  margin-top: 16px;
+  margin-top: var(--space-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .total {
-  color: #909399;
-  font-size: 14px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-family: var(--font-mono);
 }
 </style>

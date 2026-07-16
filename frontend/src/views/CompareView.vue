@@ -54,6 +54,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePapersStore } from '../stores/papers'
 import { papersApi } from '../api/papers'
+import { useTheme } from '../composables/useTheme'
+
+// 对比页用浅色主题
+useTheme('light')
 
 const router = useRouter()
 const store = usePapersStore()

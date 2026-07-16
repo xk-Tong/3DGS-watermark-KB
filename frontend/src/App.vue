@@ -1,68 +1,165 @@
 <template>
-  <!-- 根组件：顶部导航栏 + 路由出口 -->
   <div class="app-layout">
-    <!-- el-menu：Element Plus 的菜单组件。
-         mode="horizontal"：水平横向菜单。
-         router：开启路由模式，menu-item 的 index 就是跳转路径。
-         :default-active：高亮当前路由对应的菜单项。 -->
-    <el-menu mode="horizontal" router :default-active="route.path" class="nav-menu">
-      <div class="logo">3DGS-KB</div>
-      <!-- el-menu-item：菜单项。index 是路由路径（因为开了 router 模式） -->
-      <el-menu-item index="/papers">论文列表</el-menu-item>
-      <el-menu-item index="/dashboard">统计仪表盘</el-menu-item>
-      <el-menu-item index="/compare">
-        对比
-        <!-- 对比菜单显示选中数量徽章 -->
-        <el-badge v-if="store.selectedForCompare.length" :value="store.selectedForCompare.length" class="compare-badge" />
-      </el-menu-item>
-    </el-menu>
+    <!-- 轻量导航栏：替代原来的 el-menu
+         左边站名 + 右边文字链接，当前页加下划线
+         滚动时加 backdrop-blur 增强可读性 -->
+    <nav class="nav-bar" :class="{ scrolled: isScrolled }">
+      <div class="nav-inner">
+        <!-- 站名：Space Grotesk 字体 -->
+        <router-link to="/" class="brand">
+          <span class="brand-name">3DGS-KB</span>
+          <span class="brand-sub">IP Protection</span>
+        </router-link>
 
-    <!-- router-view：路由出口，当前路由匹配的页面组件在这里渲染 -->
-    <router-view />
+        <!-- 导航链接 -->
+        <div class="nav-links">
+          <router-link to="/" class="nav-link" :class="{ active: isHome }">首页</router-link>
+          <router-link to="/papers" class="nav-link" :class="{ active: isPapers }">论文</router-link>
+          <router-link to="/dashboard" class="nav-link" :class="{ active: isDashboard }">仪表盘</router-link>
+          <router-link to="/compare" class="nav-link compare-link" :class="{ active: isCompare }">
+            对比
+            <span v-if="store.selectedForCompare.length" class="compare-count">{{ store.selectedForCompare.length }}</span>
+          </router-link>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 路由出口 -->
+    <main class="main-content">
+      <router-view />
+    </main>
   </div>
 </template>
 
 <script setup>
-// useRoute：拿到当前路由信息（用于高亮当前菜单项）。
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePapersStore } from './stores/papers'
 
 const route = useRoute()
 const store = usePapersStore()
+
+// 滚动监听：导航栏在滚动时加 backdrop-blur。
+// scrollY > 10 视为已滚动。
+const isScrolled = ref(false)
+function handleScroll() {
+  isScrolled.value = window.scrollY > 10
+}
+onMounted(() => window.addEventListener('scroll', handleScroll, { passive: true }))
+onUnmounted(() => window.removeEventListener('scroll', handleScroll))
+
+// 当前路由高亮判断
+// route.path 可能是 /papers 或 /papers/123，都用 startsWith 判断
+const isHome = computed(() => route.path === '/')
+const isPapers = computed(() => route.path.startsWith('/papers'))
+const isDashboard = computed(() => route.path.startsWith('/dashboard'))
+const isCompare = computed(() => route.path.startsWith('/compare'))
 </script>
 
-<style>
-/* 全局样式重置 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;  /* border-box：宽度包含 padding 和 border，布局更直观 */
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f7fa;     /* Element Plus 推荐的浅灰背景 */
-  color: #303133;
-}
-
-/* 导航栏样式 */
-.nav-menu {
-  padding: 0 24px;
-  position: sticky;    /* sticky：滚动时吸顶 */
+<style scoped>
+/* 导航栏：透明背景 + 滚动时 backdrop-blur */
+.nav-bar {
+  position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);  /* 底部阴影 */
+  background: transparent;
+  transition: background var(--transition), backdrop-filter var(--transition);
 }
 
-.logo {
-  font-weight: 700;
-  font-size: 18px;
-  color: #409eff;
-  margin-right: 32px;
-  line-height: 60px;   /* 和菜单项高度对齐 */
+/* 滚动后：半透明背景 + 毛玻璃模糊 */
+.nav-bar.scrolled {
+  background: color-mix(in srgb, var(--bg-base) 80%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 0.5px solid var(--border-subtle);
 }
 
-.compare-badge {
+.nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 品牌区 */
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  text-decoration: none;
+}
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* 导航链接组 */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 单个链接 */
+.nav-link {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* 当前页高亮：底部下划线 */
+.nav-link.active {
+  color: var(--accent);
+}
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 12px;
+  right: 12px;
+  height: 1.5px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+
+/* 对比数量徽章 */
+.compare-count {
+  display: inline-block;
   margin-left: 4px;
+  padding: 0 6px;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--accent);
+  color: var(--text-inverse);
+  border-radius: 9px;
+}
+
+/* 主内容区 */
+.main-content {
+  min-height: calc(100vh - 56px);
 }
 </style>

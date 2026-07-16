@@ -67,7 +67,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { statsApi } from '../api/stats'
+import { useTheme } from '../composables/useTheme'
 import EChartsBase from '../components/EChartsBase.vue'
+
+// 仪表盘用深色主题——数据可视化在深色背景上更出彩
+useTheme('dark')
 
 // 统计数据
 const stats = ref({})
@@ -94,8 +98,16 @@ onMounted(async () => {
 
 // ============================================================================
 //  ECharts option 计算属性
-//  computed：依赖 stats 变化时自动重算，EChartsBase 组件监听 option 变化更新图表。
+//  仪表盘深色主题：轴线/文字用浅色，数据用辉光蓝/陶土色
 // ============================================================================
+
+// 深色主题 ECharts 通用配置——合并到每个 option 里
+const darkTheme = {
+  textStyle: { color: '#8B98A8' },
+  // 坐标轴文字/轴线颜色
+  xAxis: { axisLine: { lineStyle: { color: '#2A3441' } }, axisLabel: { color: '#8B98A8' }, splitLine: { lineStyle: { color: '#1A2330' } } },
+  yAxis: { axisLine: { lineStyle: { color: '#2A3441' } }, axisLabel: { color: '#8B98A8' }, splitLine: { lineStyle: { color: '#1A2330' } } },
+}
 
 // 中文标签映射（和 options.js 一致，这里重复定义避免循环依赖）
 const taskTypeLabels = {
@@ -117,20 +129,13 @@ const robustnessLabels = {
 // ---- 时间线柱状图 ----
 const timelineOption = computed(() => {
   const byYear = stats.value.by_year || {}
-  // 按年份排序（Object.keys 返回的顺序不确定，手动排序）。
-  // .sort() 默认按字符串排序，年份字符串排序正好是时间顺序。
   const years = Object.keys(byYear).sort()
   const counts = years.map((y) => byYear[y])
   return {
-    // tooltip：鼠标悬浮提示。trigger: 'axis' 沿坐标轴显示。
-    tooltip: { trigger: 'axis' },
-    // xAxis/xAxis：X 轴。type: 'category' 类目轴，data 是标签数组。
-    xAxis: { type: 'category', data: years, name: '年份' },
-    // yAxis：Y 轴。type: 'value' 数值轴，自动根据数据算刻度。
-    yAxis: { type: 'value', name: '论文数', minInterval: 1 },
-    // series：数据系列。type: 'bar' 柱状图。
-    series: [{ data: counts, type: 'bar', itemStyle: { color: '#409eff' } }],
-    // grid：图表在容器内的边距，留出空间给坐标轴标签。
+    tooltip: { trigger: 'axis', backgroundColor: '#1A2330', borderColor: '#2A3441', textStyle: { color: '#E8EDF2' } },
+    xAxis: { ...darkTheme.xAxis, type: 'category', data: years },
+    yAxis: { ...darkTheme.yAxis, type: 'value', minInterval: 1 },
+    series: [{ data: counts, type: 'bar', itemStyle: { color: '#7C9EFF', borderRadius: [3, 3, 0, 0] } }],
     grid: { left: '8%', right: '5%', bottom: '10%', top: '8%' },
   }
 })
@@ -138,22 +143,21 @@ const timelineOption = computed(() => {
 // ---- 任务类型分布饼图 ----
 const taskTypeOption = computed(() => {
   const byTask = stats.value.by_task_type || {}
-  // ECharts 饼图要 [{name, value}] 格式。
-  // Object.entries(obj) 把 {a:1,b:2} 转成 [['a',1],['b',2]]，再 map 成 [{name,value}]。
   const data = Object.entries(byTask).map(([key, val]) => ({
     name: taskTypeLabels[key] || key,
     value: val,
   }))
   return {
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    // legend：图例（图表旁边的分类说明）。
-    legend: { bottom: 0, type: 'scroll' },
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)', backgroundColor: '#1A2330', borderColor: '#2A3441', textStyle: { color: '#E8EDF2' } },
+    legend: { bottom: 0, type: 'scroll', textStyle: { color: '#8B98A8' } },
     series: [{
       type: 'pie',
-      radius: ['35%', '65%'],  // 内半径35%外半径65% → 环形图
-      center: ['50%', '45%'],    // 圆心位置
+      radius: ['35%', '65%'],
+      center: ['50%', '45%'],
       data,
-      label: { formatter: '{b}\n{c}篇' },
+      label: { formatter: '{b}\n{c}篇', color: '#E8EDF2' },
+      // 饼图配色：辉光蓝系 + 陶土色点缀
+      color: ['#7C9EFF', '#E5A893', '#6BB85A', '#D4A537', '#5A6573'],
     }],
   }
 })
@@ -164,10 +168,10 @@ const attributeOption = computed(() => {
   const keys = ['sh_only', 'mixed', 'auxiliary', 'other']
   const data = keys.map((k) => byAttr[k] || 0)
   return {
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: keys.map((k) => attrLabels[k]) },
-    yAxis: { type: 'value', minInterval: 1 },
-    series: [{ data, type: 'bar', itemStyle: { color: '#67c23a' } }],
+    tooltip: { trigger: 'axis', backgroundColor: '#1A2330', borderColor: '#2A3441', textStyle: { color: '#E8EDF2' } },
+    xAxis: { ...darkTheme.xAxis, type: 'category', data: keys.map((k) => attrLabels[k]) },
+    yAxis: { ...darkTheme.yAxis, type: 'value', minInterval: 1 },
+    series: [{ data, type: 'bar', itemStyle: { color: '#6BB85A', borderRadius: [3, 3, 0, 0] } }],
     grid: { left: '8%', right: '5%', bottom: '10%', top: '8%' },
   }
 })
@@ -178,10 +182,10 @@ const injectionOption = computed(() => {
   const keys = ['per_asset_finetune', 'generalizable_mapping', 'generation_embedded', 'other']
   const data = keys.map((k) => byInj[k] || 0)
   return {
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: keys.map((k) => injLabels[k]), axisLabel: { interval: 0, rotate: 15 } },
-    yAxis: { type: 'value', minInterval: 1 },
-    series: [{ data, type: 'bar', itemStyle: { color: '#e6a23c' } }],
+    tooltip: { trigger: 'axis', backgroundColor: '#1A2330', borderColor: '#2A3441', textStyle: { color: '#E8EDF2' } },
+    xAxis: { ...darkTheme.xAxis, type: 'category', data: keys.map((k) => injLabels[k]), axisLabel: { ...darkTheme.xAxis.axisLabel, interval: 0, rotate: 15 } },
+    yAxis: { ...darkTheme.yAxis, type: 'value', minInterval: 1 },
+    series: [{ data, type: 'bar', itemStyle: { color: '#E5A893', borderRadius: [3, 3, 0, 0] } }],
     grid: { left: '8%', right: '5%', bottom: '15%', top: '8%' },
   }
 })
@@ -252,6 +256,9 @@ const robustnessMatrixOption = computed(() => {
 
   return {
     tooltip: {
+      backgroundColor: '#1A2330',
+      borderColor: '#2A3441',
+      textStyle: { color: '#E8EDF2' },
       formatter: (params) => {
         const paper = papers[params.value[1]]
         const attack = attackTypes[params.value[0]]
@@ -263,66 +270,95 @@ const robustnessMatrixOption = computed(() => {
     xAxis: {
       type: 'category',
       data: attackTypes.map((a) => robustnessLabels[a]),
-      splitArea: { show: true },
-      axisLabel: { interval: 0, rotate: 30 },
+      splitArea: { show: true, areaStyle: { color: ['#0F1419', '#1A2330'] } },
+      axisLabel: { interval: 0, rotate: 30, color: '#8B98A8' },
+      axisLine: { lineStyle: { color: '#2A3441' } },
     },
     yAxis: {
       type: 'category',
       data: paperLabels,
-      splitArea: { show: true },
-      axisLabel: { fontSize: 11 },
+      splitArea: { show: true, areaStyle: { color: ['#0F1419', '#1A2330'] } },
+      axisLabel: { fontSize: 11, color: '#8B98A8' },
+      axisLine: { lineStyle: { color: '#2A3441' } },
     },
     visualMap: {
       min: 0, max: 1,
       calculable: false,
-      show: false,  // 不显示图例（只有 0/1 两值，用颜色区分即可）
-      inRange: { color: ['#f5f7fa', '#67c23a'] },
+      show: false,
+      inRange: { color: ['#1A2330', '#7C9EFF'] },
     },
     series: [{
       type: 'heatmap',
       data: heatData,
-      label: { show: true, formatter: (p) => p.value[2] ? '✓' : '' },
+      label: { show: true, formatter: (p) => p.value[2] ? '✓' : '', color: '#E8EDF2' },
     }],
   }
 })
 </script>
 
 <style scoped>
+/* 仪表盘深色主题——固定深色色值，不依赖 CSS 变量（因为 data-theme=dark 已设） */
 .dashboard-view {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--space-xl) var(--space-lg);
 }
 
-.header { margin-bottom: 20px; }
-.header h1 { font-size: 22px; color: #303133; margin-bottom: 4px; }
-.subtitle { font-size: 13px; color: #909399; }
+.header { margin-bottom: var(--space-lg); }
+.header h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.subtitle { font-size: 13px; color: var(--text-secondary); }
 
 /* 统计卡片行 */
 .stats-cards {
   display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
-.stat-card { flex: 1; text-align: center; }
-.stat-number { font-size: 32px; font-weight: 700; color: #409eff; }
-.stat-number.auto { color: #e6a23c; }
-.stat-number.reviewed { color: #67c23a; }
-.stat-label { font-size: 13px; color: #909399; margin-top: 4px; }
+.stat-card {
+  flex: 1;
+  text-align: center;
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.stat-number {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-number.auto { color: var(--warm); }
+.stat-number.reviewed { color: var(--success); }
+.stat-label { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; }
 
-/* 图表网格：两列 */
+/* 图表网格 */
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
 }
-/* 响应式：窄屏改单列 */
 @media (max-width: 900px) {
   .charts-grid { grid-template-columns: 1fr; }
 }
 
-.chart-card { margin-bottom: 0; }
+/* 图表卡片用深色 surface */
+.chart-card {
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
 .chart-card.full-width { grid-column: 1 / -1; }
-.card-title { font-weight: 600; font-size: 14px; }
+.card-title {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary);
+}
 </style>
