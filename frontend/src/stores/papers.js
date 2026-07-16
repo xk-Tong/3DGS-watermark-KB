@@ -42,6 +42,11 @@ export const usePapersStore = defineStore('papers', () => {
   const limit = ref(20)      // 每页数量
   const offset = ref(0)       // 当前页起始位置（0=第一页）
 
+  // 对比功能：选中的论文 id 列表。
+  // 用 Set 存储去重，但 ref 需要 Array 才能响应式追踪，所以用数组 + includes 判断。
+  // 限制 2-4 篇（决策文档定义）。
+  const selectedForCompare = ref([])
+
   // ---- action（动作）----
   /**
    * 拉取论文列表。
@@ -107,9 +112,36 @@ export const usePapersStore = defineStore('papers', () => {
     fetchList()
   }
 
+  /**
+   * 作用：切换某篇论文的选中状态（勾选/取消勾选对比）。
+   * @param {number} id - 论文 id
+   * @param {boolean} selected - true=选中，false=取消
+   * 限制最多 4 篇（决策文档定义 2-4 篇对比）。
+   */
+  function toggleCompare(id, selected) {
+    if (selected) {
+      // 勾选：如果已满 4 篇，不让加（返回 false 让 UI 提示）
+      if (selectedForCompare.value.length >= 4) return false
+      if (!selectedForCompare.value.includes(id)) {
+        selectedForCompare.value.push(id)
+      }
+    } else {
+      // 取消勾选：filter 返回不含该 id 的新数组
+      selectedForCompare.value = selectedForCompare.value.filter((x) => x !== id)
+    }
+    return true
+  }
+
+  /**
+   * 作用：清空对比选择。
+   */
+  function clearCompare() {
+    selectedForCompare.value = []
+  }
+
   // 返回 state 和 action，模板/store 外部能访问到。
   return {
-    items, total, loading, filters, limit, offset,
-    fetchList, resetFilters, changePage,
+    items, total, loading, filters, limit, offset, selectedForCompare,
+    fetchList, resetFilters, changePage, toggleCompare, clearCompare,
   }
 })

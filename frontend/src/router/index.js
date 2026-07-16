@@ -9,10 +9,11 @@ const routes = [
   // 访问根路径 / 时重定向到 /papers（列表页是首页）
   { path: '/', redirect: '/papers' },
   { path: '/papers', name: 'paper-list', component: PaperListView },
-  // 详情页用懒加载（动态 import）：只有访问时才加载，减小首屏体积。
+  // 下面三个页面用懒加载（动态 import）：只有访问时才加载，减小首屏体积。
   // () => import(...) 返回 Promise，Vue Router 在导航时解析组件。
-  // Phase 0 详情页只是占位，Phase 1 实现真正内容。
   { path: '/papers/:id', name: 'paper-detail', component: () => import('../views/PaperDetailView.vue') },
+  { path: '/dashboard', name: 'dashboard', component: () => import('../views/DashboardView.vue') },
+  { path: '/compare', name: 'compare', component: () => import('../views/CompareView.vue') },
 ]
 
 // createWebHistory：HTML5 history 模式，URL 是干净的 /papers 不带 # 号。

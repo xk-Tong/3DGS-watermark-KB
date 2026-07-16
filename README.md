@@ -56,15 +56,16 @@ frontend/  Vue 3 前端（src/views 页面、src/stores 状态、src/api 接口�
 pipeline/  AI 流水线（Phase 2 实现：arXiv 抓取 + DeepSeek 抽取）
 ```
 
-## 当前进度（Phase 2）
+## 当前进度（Phase 3）
 
 - ✅ Phase 0: 项目骨架 + Paper 模型 + list/get/create + 列表页
 - ✅ Phase 1: 列表筛选 + 详情页 + 编辑表单 + 新增表单
-- ✅ Phase 2: arXiv API 客户端（关键词搜索 + id_list 批量 + Atom XML 解析）
-- ✅ Phase 2: DeepSeek LLM 集成（相关性过滤 + 结构化抽取 + taxonomy prompt）
-- ✅ Phase 2: 流水线编排（arXiv→去重→过滤→抽取→入库，BackgroundTasks 后台执行）
-- ✅ Phase 2: 前端检索面板（触发按钮 + 轮询状态 + 结果展示）
-- ⏳ Phase 2 待测: 配置 DEEPSEEK_API_KEY 后测试完整流水线
+- ✅ Phase 2: AI 流水线（arXiv 抓取 + DeepSeek 抽取 + 自动入库 + 前端检索面板）
+- ✅ Phase 3: 统计仪表盘（时间线柱状图 + 机制分布 + 攻击覆盖矩阵热力图 + 统计卡片）
+- ✅ Phase 3: 论文对比视图（勾选 2-4 篇 → 横向对比表）
+- ✅ Phase 3: 顶部导航栏（列表/仪表盘/对比）
+
+下一步（Phase 4）：部署上线（买轻量机 + Nginx + systemd）。
 
 ### 配置 DeepSeek API Key
 

@@ -22,7 +22,7 @@ from .prompts import build_relevance_prompt, build_extraction_prompt
 
 # DeepSeek 配置
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_MODEL = "deepseek-v4-pro"
 
 # 模块级单例：OpenAI client 实例。
 # 用单例而非每次新建，因为 client 内部有连接池复用，重复创建浪费资源。

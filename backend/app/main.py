@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import create_db_and_tables
-from .api import papers, pipeline
+from .api import papers, pipeline, stats
 from .config import settings
 
 
@@ -62,6 +62,9 @@ app.include_router(papers.router, prefix="/api")
 
 # pipeline 路由：POST /api/pipeline/run（触发检索）、GET /api/pipeline/status（查状态）
 app.include_router(pipeline.router, prefix="/api")
+
+# stats 路由：GET /api/stats/overview（总览统计）、GET /api/stats/robustness（攻击覆盖矩阵）
+app.include_router(stats.router, prefix="/api")
 
 
 @app.get("/api/health")

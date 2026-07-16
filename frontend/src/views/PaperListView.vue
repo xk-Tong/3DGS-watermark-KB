@@ -4,7 +4,16 @@
     <div class="header">
       <h1>3DGS 水印论文库</h1>
       <span class="subtitle">3D Gaussian Splatting IP Protection Knowledge Base</span>
-      <el-button type="primary" class="add-btn" @click="createVisible = true">+ 新增论文</el-button>
+      <div class="header-actions">
+        <el-button
+          type="warning"
+          :disabled="store.selectedForCompare.length < 2"
+          @click="router.push('/compare')"
+        >
+          对比 ({{ store.selectedForCompare.length }})
+        </el-button>
+        <el-button type="primary" @click="createVisible = true">+ 新增论文</el-button>
+      </div>
     </div>
 
     <!-- AI 检索面板——触发 arXiv 抓取 + LLM 抽取 -->
@@ -93,7 +102,19 @@
     </el-card>
 
     <!-- 论文表格 -->
-    <el-table :data="store.items" v-loading="store.loading" border stripe style="width: 100%" @row-click="handleRowClick">
+    <el-table
+      :data="store.items"
+      v-loading="store.loading"
+      border
+      stripe
+      style="width: 100%"
+      @row-click="handleRowClick"
+      @selection-change="handleSelectionChange"
+    >
+      <!-- selection 列：勾选框，用于对比功能。
+           type="selection" 自动渲染复选框。
+           :selectable 控制是否可选（最多 4 篇时禁用多余的）。 -->
+      <el-table-column type="selection" width="42" :selectable="checkSelectable" />
       <!-- 行点击跳转详情：@row-click 绑定，点击整行跳转 -->
       <el-table-column prop="title" label="标题" min-width="280" />
       <el-table-column label="作者" min-width="160">
@@ -167,6 +188,35 @@ const createVisible = ref(false)   // 新增弹窗显示状态
 onMounted(() => {
   store.fetchList()
 })
+
+// ---- 对比勾选相关 ----
+
+// 当前表格选中的行（el-table 的 selection-change 事件返回的数组）
+const currentSelection = ref([])
+
+/**
+ * 作用：el-table selection-change 事件回调，表格勾选变化时触发。
+ * @param {Array} selection - 当前选中的行数组
+ */
+function handleSelectionChange(selection) {
+  currentSelection.value = selection
+  // 同步到 store 的 selectedForCompare
+  store.selectedForCompare = selection.map((p) => p.id)
+}
+
+/**
+ * 作用：控制某行是否可选（超过 4 篇时禁用未选中的行）。
+ * @param {Object} row - 行数据
+ * @param {number} index - 行索引
+ * @returns {boolean} true=可选 false=禁用
+ * el-table 的 :selectable 属性，每行渲染时调用。
+ */
+function checkSelectable(row) {
+  // 已选中的行始终可选（允许取消勾选）
+  if (store.selectedForCompare.includes(row.id)) return true
+  // 未选中的行，如果已满 4 篇则禁用
+  return store.selectedForCompare.length < 4
+}
 
 // ---- 下拉选项数据 ----
 // 把后端枚举值映射成中文标签，让用户看懂。
@@ -301,8 +351,10 @@ function statusLabel(status) {
   color: #909399;
 }
 
-.add-btn {
+.header-actions {
   float: right;
+  display: flex;
+  gap: 8px;
 }
 
 /* 筛选条卡片：浅色背景，无阴影，紧凑 */
