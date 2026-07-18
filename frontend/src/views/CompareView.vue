@@ -1,10 +1,13 @@
 <template>
   <div class="compare-view" v-loading="loading">
-    <div class="header">
-      <h1>论文对比</h1>
-      <span class="subtitle">勾选 2-4 篇论文横向对比机制维度、指标、鲁棒性</span>
-      <el-button @click="router.back()" class="back-btn">← 返回列表</el-button>
-    </div>
+    <header class="page-header" v-reveal>
+      <div class="page-heading">
+        <span class="eyebrow">Compare</span>
+        <h1 class="page-title">论文对比</h1>
+        <p class="page-intro">勾选 2–4 篇，横向对比机制维度、指标与鲁棒性</p>
+      </div>
+      <el-button @click="router.back()">← 返回列表</el-button>
+    </header>
 
     <!-- 选中数量提示 -->
     <el-alert
@@ -15,32 +18,32 @@
       style="margin-bottom: 16px"
     />
 
-    <!-- 对比表格 -->
-    <el-table v-if="papers.length >= 2" :data="compareRows" border style="width: 100%">
-      <!-- 第一列：字段名 -->
-      <el-table-column prop="label" label="对比项" width="140" fixed />
-      <!-- 每篇论文一列 -->
-      <el-table-column
-        v-for="paper in papers"
-        :key="paper.id"
-        :label="paper.title.length > 20 ? paper.title.slice(0, 20) + '...' : paper.title"
-        min-width="200"
-      >
-        <template #header>
-          <!-- 自定义表头：标题 + arxiv_id 链接 -->
-          <div class="compare-header">
-            <router-link :to="`/papers/${paper.id}`" class="paper-link">
-              {{ paper.title.length > 25 ? paper.title.slice(0, 25) + '...' : paper.title }}
-            </router-link>
-            <div class="paper-meta">{{ paper.arxiv_id || '—' }} · {{ paper.pub_date || '—' }}</div>
-          </div>
-        </template>
-        <template #default="{ row }">
-          <!-- row 是 compareRows 里的一项，row.values[paper.id] 是该论文在这个字段的值 -->
-          <span v-html="formatValue(row.values[paper.id], row.type)"></span>
-        </template>
-      </el-table-column>
-    </el-table>
+    <!-- 对比矩阵 -->
+    <div class="plate compare-plate" v-if="papers.length >= 2" v-reveal>
+      <el-table :data="compareRows" style="width: 100%">
+        <!-- 第一列：字段名 -->
+        <el-table-column prop="label" label="对比项" width="120" fixed />
+        <!-- 每篇论文一列 -->
+        <el-table-column
+          v-for="paper in papers"
+          :key="paper.id"
+          :label="paper.title.length > 20 ? paper.title.slice(0, 20) + '...' : paper.title"
+          min-width="200"
+        >
+          <template #header>
+            <div class="compare-header">
+              <router-link :to="`/papers/${paper.id}`" class="paper-link">
+                {{ paper.title.length > 25 ? paper.title.slice(0, 25) + '...' : paper.title }}
+              </router-link>
+              <div class="paper-meta">{{ paper.arxiv_id || '—' }} · {{ paper.pub_date || '—' }}</div>
+            </div>
+          </template>
+          <template #default="{ row }">
+            <span v-html="formatValue(row.values[paper.id], row.type)"></span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
     <!-- 清空选择按钮 -->
     <div v-if="papers.length > 0" class="footer">
@@ -218,35 +221,68 @@ function formatValue(value, type) {
 
 <style scoped>
 .compare-view {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--space-xl) var(--space-lg);
 }
 
-.header { margin-bottom: 20px; position: relative; }
-.header h1 { font-size: 22px; color: #303133; margin-bottom: 4px; }
-.subtitle { font-size: 13px; color: #909399; }
-.back-btn { position: absolute; right: 0; top: 0; }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+.page-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+.page-intro {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
 
-.compare-header { text-align: center; }
-.paper-link { color: #409eff; text-decoration: none; font-size: 13px; }
-.paper-meta { font-size: 11px; color: #909399; margin-top: 2px; }
+.compare-plate {
+  padding: 8px 12px 12px;
+}
 
-.footer { margin-top: 16px; text-align: center; }
+.compare-header { text-align: left; }
+.paper-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+.paper-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.footer { margin-top: var(--space-md); text-align: center; }
 
 /* :deep() 穿透 scoped，给 v-html 渲染的 span 加样式 */
 :deep(.tag) {
   display: inline-block;
-  padding: 1px 6px;
+  padding: 1px 7px;
   margin: 1px 2px;
-  background: #ecf5ff;
-  border: 1px solid #d9ecff;
+  background: var(--accent-soft);
   border-radius: 3px;
-  font-size: 12px;
-  color: #409eff;
+  font-size: 11px;
+  color: var(--accent);
 }
-:deep(.empty) { color: #c0c4cc; }
-:deep(.status.info) { color: #909399; }
-:deep(.status.warning) { color: #e6a23c; }
-:deep(.status.success) { color: #67c23a; }
+:deep(.empty) { color: var(--text-tertiary); }
+:deep(.status.info) { color: var(--text-tertiary); }
+:deep(.status.warning) { color: var(--warning); }
+:deep(.status.success) { color: var(--success); }
 </style>

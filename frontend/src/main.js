@@ -10,11 +10,13 @@ import 'element-plus/dist/index.css'
 import './assets/tokens.css'
 import App from './App.vue'
 import router from './router'
+import reveal from './directives/reveal'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus)
+app.directive('reveal', reveal)
 
 app.mount('#app')

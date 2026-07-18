@@ -6,8 +6,12 @@
 
 /* ---- 字体 ---- */
 :root {
+  /* 中文展示字：思源宋体——藏书印/碑刻气质，用于 Hero、页面标题、板头 */
+  --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+  /* 拉丁展示字/数字 */
   --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  /* 档案元数据声部：年份、arXiv ID、计数、标签 */
   --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 
   /* ---- 通用间距 ---- */
@@ -24,8 +28,14 @@
   --radius-lg: 14px;
   --radius-xl: 20px;
 
+  /* ---- 缓动 ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);   /* 出场曲线：快入缓停，手感自然 */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
   /* ---- 过渡 ---- */
-  --transition: 0.2s ease;
+  --transition-fast: 0.15s var(--ease-out);
+  --transition: 0.25s var(--ease-out);
+  --transition-slow: 0.5s var(--ease-out);
 }
 
 /* ==========================================================================
@@ -35,54 +45,74 @@
    ========================================================================== */
 [data-theme="light"] {
   /* 背景层级 */
-  --bg-base: #FAF8F3;          /* 页面背景：暖米白，像旧纸张 */
-  --bg-surface: #FFFFFF;       /* 卡片表面 */
+  --bg-base: #F4F3EF;          /* 画廊石灰：冷静、克制，不像奶油 */
+  --bg-surface: #FCFBF8;       /* 面板：软白，非死白 */
   --bg-elevated: #FFFFFF;      /* 悬浮元素（dropdown） */
-  --bg-hover: #F5F2EB;         /* hover 态背景 */
+  --bg-hover: #EDECE7;         /* hover 态背景 */
 
   /* 文字 */
-  --text-primary: #2C2C2C;     /* 主文字 */
-  --text-secondary: #6B6B6B;   /* 次文字 */
-  --text-tertiary: #A0A0A0;   /* 占位/提示 */
-  --text-inverse: #FAF8F3;     /* 深色背景上的文字 */
+  --text-primary: #23272E;     /* 冷墨 */
+  --text-secondary: #5C6470;   /* 次文字 */
+  --text-tertiary: #9AA1AB;    /* 占位/提示 */
+  --text-inverse: #F4F3EF;     /* 深色背景上的文字 */
 
   /* 边框 */
-  --border-subtle: #E8E4DC;    /* 低对比边框（卡片） */
-  --border-default: #D5D0C5;  /* 默认边框 */
-  --border-strong: #B8B2A4;   /* 强调边框 */
+  --border-subtle: #E3E1D9;    /* hairline（卡片/分隔） */
+  --border-default: #D6D3C9;   /* 默认边框 */
+  --border-strong: #B4B0A2;    /* 强调边框 */
 
   /* 强调色 */
-  --accent: #3D5A80;          /* 墨水蓝：链接、按钮、高亮 */
-  --accent-hover: #2E4560;     /* hover 加深 */
-  --accent-soft: #E8EDF3;     /* 浅蓝背景（tag） */
+  --accent: #2E4A6B;           /* 深墨蓝：链接、按钮、高亮 */
+  --accent-hover: #233A56;     /* hover 加深 */
+  --accent-soft: #E6EBF2;      /* 浅蓝背景（tag） */
 
   /* 点缀色 */
-  --warm: #C44536;             /* 砖红：错误、警示 */
-  --warm-soft: #F5E8E5;       /* 浅红背景 */
-  --success: #4A7C3A;         /* 深绿：成功 */
+  --warm: #B8392B;             /* 朱砂：印章、错误、警示 */
+  --warm-soft: #F6E9E6;        /* 浅朱背景 */
+  --gold: #A98B45;             /* 古金：重要发现、高亮标记 */
+  --gold-soft: #F3EEE0;        /* 浅金背景 */
+  --success: #4A7C3A;          /* 深绿：成功 */
   --success-soft: #EBF0E5;
-  --warning: #B8860B;         /* 琥珀：注意 */
-  --warning-soft: #F5F0E0;
+  --warning: #B8860B;          /* 琥珀：注意 */
+  --warning-soft: #F3EEE0;
+
+  /* 阴影：暖调分层，低存在感——只在 hover/悬浮时感知 */
+  --shadow-sm: 0 1px 2px rgba(35, 39, 46, 0.05);
+  --shadow-md: 0 2px 6px rgba(35, 39, 46, 0.04), 0 12px 28px -12px rgba(35, 39, 46, 0.12);
+  --shadow-lg: 0 4px 12px rgba(35, 39, 46, 0.05), 0 24px 48px -16px rgba(35, 39, 46, 0.18);
 
   /* Element Plus 主题覆盖 */
-  --el-color-primary: #3D5A80;
-  --el-color-primary-light-3: #6B85A0;
-  --el-color-primary-light-5: #9AAEC4;
-  --el-color-primary-light-7: #C5D2DE;
-  --el-color-primary-light-9: #EDF1F5;
-  --el-color-primary-dark-2: #2E4560;
-  --el-color-danger: #C44536;
+  --el-color-primary: #2E4A6B;
+  --el-color-primary-light-3: #5C738F;
+  --el-color-primary-light-5: #8A9DB4;
+  --el-color-primary-light-7: #B8C4D2;
+  --el-color-primary-light-9: #EAEEF3;
+  --el-color-primary-dark-2: #233A56;
+  --el-color-danger: #B8392B;
   --el-color-success: #4A7C3A;
   --el-color-warning: #B8860B;
-  --el-bg-color: #FFFFFF;
-  --el-bg-color-page: #FAF8F3;
-  --el-text-color-primary: #2C2C2C;
-  --el-text-color-regular: #6B6B6B;
-  --el-text-color-secondary: #A0A0A0;
-  --el-border-color: #E8E4DC;
-  --el-border-color-light: #F0EDE6;
-  --el-fill-color-light: #F5F2EB;
+  --el-bg-color: #FCFBF8;
+  --el-bg-color-page: #F4F3EF;
+  --el-text-color-primary: #23272E;
+  --el-text-color-regular: #5C6470;
+  --el-text-color-secondary: #9AA1AB;
+  --el-border-color: #E3E1D9;
+  --el-border-color-light: #E9E7E0;
+  --el-border-color-lighter: #EFEDE6;
+  --el-fill-color-light: #EDECE7;
+  --el-fill-color-blank: #FCFBF8;
   --el-font-family: var(--font-body);
+  --el-font-size-base: 13px;
+  --el-border-radius-base: 4px;
+  --el-border-radius-small: 3px;
+  /* 表格：去斑马纹的编目感——透明表头 + hairline */
+  --el-table-border-color: var(--border-subtle);
+  --el-table-header-bg-color: transparent;
+  --el-table-header-text-color: var(--text-tertiary);
+  --el-table-row-hover-bg-color: var(--bg-hover);
+  --el-table-tr-bg-color: transparent;
+  /* 卡片内边距收紧 */
+  --el-card-padding: 18px;
 }
 
 /* ==========================================================================
@@ -116,10 +146,17 @@
   /* 点缀色 */
   --warm: #E5A893;             /* 陶土：水印/警示 */
   --warm-soft: #2E2420;
+  --gold: #D4B86A;            /* 暖金：重要发现 */
+  --gold-soft: #2E2818;
   --success: #6BB85A;
   --success-soft: #1A2818;
   --warning: #D4A537;
   --warning-soft: #2E2818;
+
+  /* 阴影：深底色上靠更深的暗部分层 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3), 0 12px 28px -12px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.35), 0 24px 48px -16px rgba(0, 0, 0, 0.65);
 
   /* Element Plus 深色覆盖（仪表盘用的组件） */
   --el-color-primary: #7C9EFF;
@@ -204,6 +241,128 @@ a:hover {
 ::selection {
   background: var(--accent);
   color: var(--text-inverse);
+}
+
+/* ==========================================================================
+   全站工具类
+   档案编目语言的共用零件：眉标、档案板、定义行、小标签。
+   各页面 scoped 样式只做布局，视觉零件统一从这里取。
+   ========================================================================== */
+
+/* 眉标：mono 小字 + 短横线，编目卡片的"档号签" */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* 档案板（plate）：取代 el-card 的内容容器 */
+.plate {
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.plate-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 13px 20px;
+  border-bottom: 0.5px solid var(--border-subtle);
+}
+.plate-title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+}
+.plate-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.plate-body {
+  padding: 20px;
+}
+
+/* 定义行：label 在左（mono 档号），value 在右，hairline 分隔 */
+.def-row {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--border-subtle);
+}
+.def-row:last-child {
+  border-bottom: none;
+}
+.def-label {
+  flex: none;
+  width: 88px;
+  padding-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+.def-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+/* 小标签：任务类型等枚举的轻量展示（替代 el-tag 的厚重感） */
+.mini-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 11px;
+  line-height: 1.6;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* 键盘焦点可见性（无障碍基线） */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   滚动入场（配合 v-reveal 指令）
+   初始透明 + 下移 18px，进入视口后归位；--reveal-delay 控制同组 stagger。
+   reduced-motion 由下方的全局媒体查询兜底（过渡时长归零，直接呈现终态）。
+   ========================================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* 尊重 reduced-motion */

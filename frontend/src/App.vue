@@ -5,10 +5,10 @@
          滚动时加 backdrop-blur 增强可读性 -->
     <nav class="nav-bar" :class="{ scrolled: isScrolled }">
       <div class="nav-inner">
-        <!-- 站名：Space Grotesk 字体 -->
+        <!-- 站名 -->
         <router-link to="/" class="brand">
-          <span class="brand-name">3DGS-KB</span>
-          <span class="brand-sub">IP Protection</span>
+          <span class="brand-name">3DGS·KB</span>
+          <span class="brand-sub">IP Protection Archive</span>
         </router-link>
 
         <!-- 导航链接 -->
@@ -28,6 +28,12 @@
     <main class="main-content">
       <router-view />
     </main>
+
+    <!-- 页脚题跋：archive 的 colophon -->
+    <footer class="colophon">
+      <span>3DGS·KB — 3D Gaussian Splatting 水印与 IP 保护论文档案</span>
+      <span class="colophon-note">arXiv × DeepSeek Pipeline</span>
+    </footer>
   </div>
 </template>
 
@@ -57,28 +63,28 @@ const isCompare = computed(() => route.path.startsWith('/compare'))
 </script>
 
 <style scoped>
-/* 导航栏：透明背景 + 滚动时 backdrop-blur */
+/* 导航栏：常驻 hairline 底边（编目卡头感），滚动时毛玻璃 */
 .nav-bar {
   position: sticky;
   top: 0;
   z-index: 100;
   background: transparent;
+  border-bottom: 0.5px solid var(--border-subtle);
   transition: background var(--transition), backdrop-filter var(--transition);
 }
 
 /* 滚动后：半透明背景 + 毛玻璃模糊 */
 .nav-bar.scrolled {
-  background: color-mix(in srgb, var(--bg-base) 80%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 0.5px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--bg-base) 82%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .nav-inner {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--space-lg);
-  height: 56px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -88,20 +94,22 @@ const isCompare = computed(() => route.path.startsWith('/compare'))
 .brand {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
   text-decoration: none;
 }
 .brand-name {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 16px;
-  color: var(--accent);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 .brand-sub {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-tertiary);
   font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 /* 导航链接组 */
@@ -127,9 +135,10 @@ const isCompare = computed(() => route.path.startsWith('/compare'))
   background: var(--bg-hover);
 }
 
-/* 当前页高亮：底部下划线 */
+/* 当前页高亮：底部墨线 */
 .nav-link.active {
-  color: var(--accent);
+  color: var(--text-primary);
+  font-weight: 500;
 }
 .nav-link.active::after {
   content: '';
@@ -138,7 +147,7 @@ const isCompare = computed(() => route.path.startsWith('/compare'))
   left: 12px;
   right: 12px;
   height: 1.5px;
-  background: var(--accent);
+  background: var(--text-primary);
   border-radius: 1px;
 }
 
@@ -160,6 +169,25 @@ const isCompare = computed(() => route.path.startsWith('/compare'))
 
 /* 主内容区 */
 .main-content {
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 60px);
+}
+
+/* 页脚题跋 */
+.colophon {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-lg);
+  border-top: 0.5px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.colophon-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
 }
 </style>

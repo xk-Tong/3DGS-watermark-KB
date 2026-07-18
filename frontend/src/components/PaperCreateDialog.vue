@@ -249,7 +249,7 @@ async function handleCreate() {
 <style scoped>
 .hint {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-tertiary);
   margin-top: 4px;
 }
 </style>
