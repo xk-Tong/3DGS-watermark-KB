@@ -6,7 +6,7 @@
   2. 部署到不同环境（本地开发 / 生产服务器）时只改这里
 """
 from pathlib import Path
-
+import os
 # dotenv：从 .env 文件加载环境变量。
 # .env 文件放敏感配置（如 API key），不进 git（已 gitignore）。
 # load_dotenv() 会在启动时读取 backend/.env，把里面的 KEY=VALUE 注入 os.environ，
@@ -37,10 +37,13 @@ class settings:
     db_path = BASE_DIR / "data" / "kb.db"
 
     # CORS（跨域资源共享）允许的前端来源。
-    # 开发期前端跑在 5173 端口，后端在 8000，属于"不同源"，浏览器默认会拦截跨域请求。
-    # 这里声明允许哪些前端地址访问后端 API。
-    # 生产部署时换成你的域名，如 ["https://kb.yourdomain.com"]。
-    cors_origins = [
-        "http://localhost:5173",   # Vite 默认端口
-        "http://127.0.0.1:5173",  # 有的浏览器把 localhost 解析成 127.0.0.1
-    ]
+    # 从环境变量读，逗号分隔。本地开发不配则用默认值。
+    # .env 里写：CORS_ORIGINS=http://localhost:5173  或  http://你的公网IP
+    _cors_env = os.environ.get("CORS_ORIGINS", "")
+    if _cors_env:
+        cors_origins = [o.strip() for o in _cors_env.split(",")]
+    else:
+        cors_origins = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
