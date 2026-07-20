@@ -25,44 +25,43 @@
 
     <!-- 筛选板 -->
     <div class="plate filter-plate" v-reveal>
-      <el-form :inline="true" :model="store.filters" label-width="auto">
-        <el-form-item>
+      <el-form :model="store.filters" label-width="auto" class="filter-form">
+        <el-form-item class="filter-search">
           <el-input
             v-model="store.filters.q"
             placeholder="搜索标题/摘要/方法/批注"
             clearable
-            style="width: 240px"
             @keyup.enter="handleSearch"
             @clear="handleSearch"
           />
         </el-form-item>
 
         <el-form-item label="任务">
-          <el-select v-model="store.filters.task_type" placeholder="全部" clearable style="width: 120px" @change="handleSearch">
+          <el-select v-model="store.filters.task_type" placeholder="全部" clearable @change="handleSearch">
             <el-option v-for="opt in taskTypeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="属性">
-          <el-select v-model="store.filters.attribute_selection" placeholder="全部" clearable style="width: 110px" @change="handleSearch">
+          <el-select v-model="store.filters.attribute_selection" placeholder="全部" clearable @change="handleSearch">
             <el-option v-for="opt in attributeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="分布">
-          <el-select v-model="store.filters.distribution_strategy" placeholder="全部" clearable style="width: 130px" @change="handleSearch">
+          <el-select v-model="store.filters.distribution_strategy" placeholder="全部" clearable @change="handleSearch">
             <el-option v-for="opt in distributionOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="注入">
-          <el-select v-model="store.filters.injection_pipeline" placeholder="全部" clearable style="width: 130px" @change="handleSearch">
+          <el-select v-model="store.filters.injection_pipeline" placeholder="全部" clearable @change="handleSearch">
             <el-option v-for="opt in injectionOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="阅读">
-          <el-select v-model="store.filters.read_status" placeholder="全部" clearable style="width: 90px" @change="handleSearch">
+          <el-select v-model="store.filters.read_status" placeholder="全部" clearable @change="handleSearch">
             <el-option label="未读" value="unread" />
             <el-option label="在读" value="reading" />
             <el-option label="已读" value="read" />
@@ -70,29 +69,70 @@
         </el-form-item>
 
         <el-form-item label="质量">
-          <el-select v-model="store.filters.curation_status" placeholder="全部" clearable style="width: 110px" @change="handleSearch">
+          <el-select v-model="store.filters.curation_status" placeholder="全部" clearable @change="handleSearch">
             <el-option label="AI 未核实" value="auto" />
             <el-option label="已复核" value="reviewed" />
             <el-option label="已验证" value="verified" />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="排序">
-          <el-select v-model="store.filters.sort_by" style="width: 110px" @change="handleSearch">
+        <el-form-item label="排序" class="filter-sort">
+          <el-select v-model="store.filters.sort_by" @change="handleSearch">
             <el-option label="入库时间" value="added_at" />
             <el-option label="发表日期" value="pub_date" />
             <el-option label="PSNR" value="psnr" />
           </el-select>
         </el-form-item>
 
-        <el-form-item>
+        <el-form-item class="filter-reset">
           <el-button text @click="store.resetFilters()">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
 
-    <!-- 编目列表 -->
-    <div class="catalog" v-loading="store.loading">
+    <!-- 编目列表：<640px 用卡片视图，否则用原 grid 表格 -->
+    <div v-if="isCardView" class="paper-cards" v-loading="store.loading">
+      <article
+        v-for="paper in store.items"
+        :key="paper.id"
+        class="paper-card"
+        tabindex="0"
+        @click="router.push(`/papers/${paper.id}`)"
+        @keydown.enter="router.push(`/papers/${paper.id}`)"
+      >
+        <header class="card-head">
+          <StatusSeal :status="paper.curation_status" />
+          <span class="card-year">{{ yearOf(paper.pub_date) }}</span>
+          <span class="row-read" :class="paper.read_status">{{ readStatusLabel(paper.read_status) }}</span>
+        </header>
+        <h3 class="card-title">{{ paper.title }}</h3>
+        <p class="card-authors">{{ paper.authors.slice(0, 3).join(', ') }}{{ paper.authors.length > 3 ? ' et al.' : '' }}</p>
+        <div v-if="paper.task_type && paper.task_type.length" class="card-tags">
+          <span v-for="t in paper.task_type" :key="t" class="mini-tag">{{ taskTypeLabel(t) }}</span>
+        </div>
+        <footer class="card-foot">
+          <span
+            class="row-check"
+            :class="{
+              checked: isSelected(paper.id),
+              disabled: !isSelected(paper.id) && store.selectedForCompare.length >= 4,
+            }"
+            :title="isSelected(paper.id) ? '移出对比' : '加入对比（最多 4 篇）'"
+            @click.stop="toggleCompare(paper)"
+          >
+            <span class="checkmark">✓</span>
+          </span>
+          <el-link type="primary" :underline="false" @click.stop="router.push(`/papers/${paper.id}`)">
+            详情 →
+          </el-link>
+        </footer>
+      </article>
+      <div v-if="!store.loading && !store.items.length" class="empty-state">
+        没有匹配的论文——放宽筛选条件，或触发一次 AI 检索。
+      </div>
+    </div>
+
+    <div v-else class="catalog" v-loading="store.loading">
       <!-- 表头：档号行。年份可点击排序 -->
       <div class="catalog-head">
         <span class="ch-check"></span>
@@ -177,6 +217,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { usePapersStore } from '../stores/papers'
 import { useTheme } from '../composables/useTheme'
+import { useMediaQuery } from '../composables/useMediaQuery'
 import PaperCreateDialog from '../components/PaperCreateDialog.vue'
 import PipelinePanel from '../components/PipelinePanel.vue'
 import StatusSeal from '../components/StatusSeal.vue'
@@ -187,6 +228,8 @@ useTheme('light')
 const router = useRouter()
 const store = usePapersStore()
 const createVisible = ref(false)
+// <640px 切换为卡片视图
+const isCardView = useMediaQuery('(max-width: 639px)')
 
 onMounted(() => {
   store.fetchList()
@@ -300,6 +343,12 @@ function yearOf(dateStr) {
   margin: 0 auto;
   padding: var(--space-xl) var(--space-lg);
 }
+@media (max-width: 639px) {
+  .paper-list-view { padding: var(--space-lg) var(--space-md); }
+  .page-header { flex-direction: column; align-items: stretch; }
+  .page-actions { width: 100%; }
+  .page-actions .el-button { flex: 1; }
+}
 
 /* ===== 页头 ===== */
 .page-header {
@@ -316,7 +365,7 @@ function yearOf(dateStr) {
 }
 .page-title {
   font-family: var(--font-serif);
-  font-size: 32px;
+  font-size: clamp(1.5rem, 5vw, 32px);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.01em;
@@ -340,13 +389,56 @@ function yearOf(dateStr) {
   padding: 14px 18px 6px;
   margin-bottom: var(--space-lg);
 }
+/* 默认（移动端）：单列 grid，控件填满单元 */
+.filter-plate :deep(.filter-form) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+/* 搜索框置顶，跨整行 */
+.filter-plate :deep(.filter-search) {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.filter-plate :deep(.filter-reset) {
+  margin: 0;
+}
 .filter-plate :deep(.el-form-item) {
-  margin-right: 14px;
-  margin-bottom: 10px;
+  margin: 0;
 }
 .filter-plate :deep(.el-form-item__label) {
   font-size: 12px;
   color: var(--text-tertiary);
+}
+.filter-plate :deep(.el-input),
+.filter-plate :deep(.el-select) {
+  width: 100%;
+}
+
+/* ≥640px：2 列 grid */
+@media (min-width: 640px) {
+  .filter-plate :deep(.filter-form) {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+  }
+  .filter-plate :deep(.filter-search) { grid-column: 1 / -1; }
+  .filter-plate :deep(.filter-reset) { grid-column: 1 / -1; }
+}
+
+/* ≥1024px：恢复 inline 横向流 */
+@media (min-width: 1024px) {
+  .filter-plate :deep(.filter-form) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .filter-plate :deep(.filter-search) { grid-column: auto; flex: 1 1 240px; }
+  .filter-plate :deep(.filter-reset) { grid-column: auto; }
+  .filter-plate :deep(.el-form-item) { margin-right: 14px; margin-bottom: 10px; }
+  .filter-plate :deep(.el-input),
+  .filter-plate :deep(.el-select) { width: auto; }
+  .filter-plate :deep(.filter-form .filter-search .el-input) { width: 240px; }
+  .filter-plate :deep(.filter-form .el-form-item:not(.filter-search):not(.filter-reset) .el-select) { min-width: 110px; max-width: 160px; }
 }
 
 /* ===== 编目列表 ===== */
@@ -532,5 +624,74 @@ function yearOf(dateStr) {
   .row-authors {
     display: none;
   }
+}
+
+/* ===== 卡片视图（<640px） ===== */
+.paper-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.paper-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: box-shadow var(--transition), transform var(--transition);
+  min-height: 44px;
+}
+.paper-card:hover {
+  box-shadow: var(--shadow-md);
+}
+.paper-card:active {
+  transform: scale(0.99);
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+}
+.card-year {
+  color: var(--accent);
+}
+.card-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0;
+}
+.card-authors {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 0.5px solid var(--border-subtle);
+  margin-top: 4px;
+  min-height: 36px;
 }
 </style>

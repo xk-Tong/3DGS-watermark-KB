@@ -7,10 +7,12 @@
     :model-value="visible"
     @update:model-value="$emit('update:visible', $event)"
     title="编辑论文"
-    width="800px"
+    :width="isMobile ? '100%' : '800px'"
+    :fullscreen="isMobile"
     destroy-on-close
+    class="responsive-dialog"
   >
-    <el-form :model="form" label-width="100px" label-position="right">
+    <el-form :model="form" :label-width="isMobile ? 'auto' : '100px'" :label-position="isMobile ? 'top' : 'right'">
       <!-- el-tabs：标签页，把编辑表单分组，避免一个长表单滚动到底。
            v-model 绑定当前激活的 tab 名。 -->
       <el-tabs v-model="activeTab">
@@ -155,6 +157,7 @@
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { papersApi } from '../api/papers'
+import { useMediaQuery } from '../composables/useMediaQuery'
 import {
   taskTypeOptions, attributeOptions, distributionOptions, injectionOptions,
   robustness2DOptions, robustness3DOptions, readStatusOptions,
@@ -172,6 +175,8 @@ const props = defineProps({
 // 'update:visible'：配合 v-model:visible 实现 .sync 双向绑定。
 // 'saved'：保存成功后通知父组件刷新数据。
 const emit = defineEmits(['update:visible', 'saved'])
+
+const isMobile = useMediaQuery('(max-width: 1023px)')
 
 // 表单数据和状态
 const form = ref({})             // 表单数据，从 paper 复制过来

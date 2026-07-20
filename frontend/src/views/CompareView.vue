@@ -18,31 +18,51 @@
       style="margin-bottom: 16px"
     />
 
-    <!-- 对比矩阵 -->
-    <div class="plate compare-plate" v-if="papers.length >= 2" v-reveal>
-      <el-table :data="compareRows" style="width: 100%">
-        <!-- 第一列：字段名 -->
-        <el-table-column prop="label" label="对比项" width="120" fixed />
-        <!-- 每篇论文一列 -->
-        <el-table-column
-          v-for="paper in papers"
-          :key="paper.id"
-          :label="paper.title.length > 20 ? paper.title.slice(0, 20) + '...' : paper.title"
-          min-width="200"
-        >
-          <template #header>
-            <div class="compare-header">
-              <router-link :to="`/papers/${paper.id}`" class="paper-link">
-                {{ paper.title.length > 25 ? paper.title.slice(0, 25) + '...' : paper.title }}
-              </router-link>
-              <div class="paper-meta">{{ paper.arxiv_id || '—' }} · {{ paper.pub_date || '—' }}</div>
-            </div>
-          </template>
-          <template #default="{ row }">
-            <span v-html="formatValue(row.values[paper.id], row.type)"></span>
-          </template>
-        </el-table-column>
-      </el-table>
+    <!-- 对比矩阵：<640px 用卡片堆叠视图，否则用 el-table 横向滚动 -->
+    <div v-if="!isCardView && papers.length >= 2" class="plate compare-plate" v-reveal>
+      <div class="table-scroll">
+        <el-table :data="compareRows" style="width: 100%" class="compare-table">
+          <!-- 第一列：字段名 -->
+          <el-table-column prop="label" label="对比项" width="120" fixed />
+          <!-- 每篇论文一列 -->
+          <el-table-column
+            v-for="paper in papers"
+            :key="paper.id"
+            :label="paper.title.length > 20 ? paper.title.slice(0, 20) + '...' : paper.title"
+            min-width="200"
+          >
+            <template #header>
+              <div class="compare-header">
+                <router-link :to="`/papers/${paper.id}`" class="paper-link">
+                  {{ paper.title.length > 25 ? paper.title.slice(0, 25) + '...' : paper.title }}
+                </router-link>
+                <div class="paper-meta">{{ paper.arxiv_id || '—' }} · {{ paper.pub_date || '—' }}</div>
+              </div>
+            </template>
+            <template #default="{ row }">
+              <span v-html="formatValue(row.values[paper.id], row.type)"></span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <!-- 卡片堆叠视图（<640px）：每篇论文一张 card，定义项 label/value 纵向堆叠 -->
+    <div v-else-if="isCardView && papers.length >= 2" class="compare-cards" v-reveal>
+      <article v-for="paper in papers" :key="paper.id" class="compare-card plate">
+        <header class="cc-head">
+          <router-link :to="`/papers/${paper.id}`" class="paper-link">
+            {{ paper.title }}
+          </router-link>
+          <div class="paper-meta">{{ paper.arxiv_id || '—' }} · {{ paper.pub_date || '—' }}</div>
+        </header>
+        <dl class="cc-rows">
+          <div v-for="row in compareRows" :key="row.type" class="cc-row">
+            <dt class="cc-label">{{ row.label }}</dt>
+            <dd class="cc-value" v-html="formatValue(row.values[paper.id], row.type)"></dd>
+          </div>
+        </dl>
+      </article>
     </div>
 
     <!-- 清空选择按钮 -->
@@ -58,6 +78,7 @@ import { useRouter } from 'vue-router'
 import { usePapersStore } from '../stores/papers'
 import { papersApi } from '../api/papers'
 import { useTheme } from '../composables/useTheme'
+import { useMediaQuery } from '../composables/useMediaQuery'
 
 // 对比页用浅色主题
 useTheme('light')
@@ -67,6 +88,8 @@ const store = usePapersStore()
 
 const papers = ref([])
 const loading = ref(true)
+// <640px 切换为卡片堆叠视图
+const isCardView = useMediaQuery('(max-width: 639px)')
 
 // 中文标签映射
 const taskLabels = {
@@ -225,6 +248,11 @@ function formatValue(value, type) {
   margin: 0 auto;
   padding: var(--space-xl) var(--space-lg);
 }
+@media (max-width: 639px) {
+  .compare-view { padding: var(--space-lg) var(--space-md); }
+  .page-header { flex-direction: column; align-items: stretch; }
+  .page-header .el-button { width: 100%; }
+}
 
 .page-header {
   display: flex;
@@ -240,7 +268,7 @@ function formatValue(value, type) {
 }
 .page-title {
   font-family: var(--font-serif);
-  font-size: 32px;
+  font-size: clamp(1.5rem, 5vw, 32px);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.01em;
@@ -253,6 +281,13 @@ function formatValue(value, type) {
 .compare-plate {
   padding: 8px 12px 12px;
 }
+
+/* 表格横向滚动容器：<1024px 启用原生滚动 */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.compare-table { min-width: 640px; }
 
 .compare-header { text-align: left; }
 .paper-link {
@@ -270,6 +305,51 @@ function formatValue(value, type) {
 }
 
 .footer { margin-top: var(--space-md); text-align: center; }
+
+/* 卡片堆叠视图（<640px） */
+.compare-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.compare-card {
+  padding: 16px;
+}
+.cc-head {
+  margin-bottom: var(--space-sm);
+  padding-bottom: 10px;
+  border-bottom: 0.5px solid var(--border-subtle);
+}
+.cc-head .paper-link { font-size: 15px; }
+.cc-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.cc-row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 0.5px solid var(--border-subtle);
+}
+.cc-row:last-child { border-bottom: none; }
+.cc-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  margin: 0;
+  padding-top: 2px;
+}
+.cc-value {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin: 0;
+  word-break: break-word;
+}
 
 /* :deep() 穿透 scoped，给 v-html 渲染的 span 加样式 */
 :deep(.tag) {

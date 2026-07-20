@@ -2,17 +2,18 @@
   <div class="app-layout">
     <!-- 轻量导航栏：替代原来的 el-menu
          左边站名 + 右边文字链接，当前页加下划线
-         滚动时加 backdrop-blur 增强可读性 -->
+         滚动时加 backdrop-blur 增强可读性
+         <1024px 时 nav-links 折叠为汉堡按钮 + el-drawer -->
     <nav class="nav-bar" :class="{ scrolled: isScrolled }">
       <div class="nav-inner">
         <!-- 站名 -->
         <router-link to="/" class="brand">
           <span class="brand-name">3DGS·KB</span>
-          <span class="brand-sub">IP Protection Archive</span>
+          <span v-show="!isMobile" class="brand-sub">IP Protection Archive</span>
         </router-link>
 
-        <!-- 导航链接 -->
-        <div class="nav-links">
+        <!-- 导航链接（桌面端） -->
+        <div v-show="!isMobile" class="nav-links">
           <router-link to="/" class="nav-link" :class="{ active: isHome }">首页</router-link>
           <router-link to="/papers" class="nav-link" :class="{ active: isPapers }">论文</router-link>
           <router-link to="/dashboard" class="nav-link" :class="{ active: isDashboard }">仪表盘</router-link>
@@ -21,8 +22,47 @@
             <span v-if="store.selectedForCompare.length" class="compare-count">{{ store.selectedForCompare.length }}</span>
           </router-link>
         </div>
+
+        <!-- 移动端汉堡按钮 -->
+        <button
+          v-show="isMobile"
+          class="menu-trigger"
+          type="button"
+          aria-label="打开菜单"
+          @click="drawerOpen = true"
+        >
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
       </div>
     </nav>
+
+    <!-- 移动端抽屉菜单 -->
+    <el-drawer
+      v-model="drawerOpen"
+      direction="rtl"
+      :size="280"
+      :with-header="false"
+      class="nav-drawer"
+    >
+      <nav class="drawer-nav">
+        <router-link
+          v-for="item in navItems"
+          :key="item.path"
+          :to="item.path"
+          class="drawer-link"
+          :class="{ active: item.isActive }"
+          @click="drawerOpen = false"
+        >
+          <span>{{ item.label }}</span>
+          <span
+            v-if="item.badge"
+            class="compare-count"
+          >{{ item.badge }}</span>
+        </router-link>
+      </nav>
+    </el-drawer>
 
     <!-- 路由出口 -->
     <main class="main-content">
@@ -38,9 +78,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePapersStore } from './stores/papers'
+import { useMediaQuery } from './composables/useMediaQuery'
 
 const route = useRoute()
 const store = usePapersStore()
@@ -60,6 +101,25 @@ const isHome = computed(() => route.path === '/')
 const isPapers = computed(() => route.path.startsWith('/papers'))
 const isDashboard = computed(() => route.path.startsWith('/dashboard'))
 const isCompare = computed(() => route.path.startsWith('/compare'))
+
+// 移动端 <1024px 触发汉堡 + drawer
+const isMobile = useMediaQuery('(max-width: 1023px)')
+const drawerOpen = ref(false)
+// 切到桌面时关闭 drawer，避免状态错位
+watch(isMobile, (v) => { if (!v) drawerOpen.value = false })
+
+// 抽屉中的导航项（与桌面链接同构）
+const navItems = computed(() => [
+  { path: '/', label: '首页', isActive: isHome.value },
+  { path: '/papers', label: '论文', isActive: isPapers.value },
+  { path: '/dashboard', label: '仪表盘', isActive: isDashboard.value },
+  {
+    path: '/compare',
+    label: '对比',
+    isActive: isCompare.value,
+    badge: store.selectedForCompare.length || 0,
+  },
+])
 </script>
 
 <style scoped>
@@ -167,6 +227,57 @@ const isCompare = computed(() => route.path.startsWith('/compare'))
   border-radius: 9px;
 }
 
+/* 移动端汉堡按钮 */
+.menu-trigger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+.menu-trigger:hover { background: var(--bg-hover); }
+.menu-trigger .bar {
+  display: block;
+  width: 20px;
+  height: 1.5px;
+  margin: 0 auto;
+  background: var(--text-primary);
+  border-radius: 1px;
+  transition: transform var(--transition), opacity var(--transition);
+}
+
+/* 抽屉导航 */
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-lg) 0;
+}
+.drawer-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  font-size: 15px;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--border-subtle);
+  transition: background var(--transition);
+  min-height: 48px; /* 触控目标 ≥44px */
+}
+.drawer-link:hover { background: var(--bg-hover); }
+.drawer-link.active {
+  color: var(--accent);
+  font-weight: 500;
+  background: var(--accent-soft);
+}
+
 /* 主内容区 */
 .main-content {
   min-height: calc(100vh - 60px);
@@ -189,5 +300,19 @@ const isCompare = computed(() => route.path.startsWith('/compare'))
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
+}
+
+/* footer 移动端堆叠 */
+@media (max-width: 639px) {
+  .colophon {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
+}
+
+/* 导航内边距移动端收紧 */
+@media (max-width: 639px) {
+  .nav-inner { padding: 0 var(--space-md); }
 }
 </style>

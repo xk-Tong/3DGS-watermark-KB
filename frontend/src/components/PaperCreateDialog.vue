@@ -3,10 +3,12 @@
     :model-value="visible"
     @update:model-value="$emit('update:visible', $event)"
     title="新增论文"
-    width="800px"
+    :width="isMobile ? '100%' : '800px'"
+    :fullscreen="isMobile"
     destroy-on-close
+    class="responsive-dialog"
   >
-    <el-form :model="form" label-width="100px" label-position="right">
+    <el-form :model="form" :label-width="isMobile ? 'auto' : '100px'" :label-position="isMobile ? 'top' : 'right'">
       <el-tabs v-model="activeTab">
         <el-tab-pane label="基本信息" name="basic">
           <el-form-item label="标题" required>
@@ -134,6 +136,7 @@
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { papersApi } from '../api/papers'
+import { useMediaQuery } from '../composables/useMediaQuery'
 import {
   taskTypeOptions, attributeOptions, distributionOptions, injectionOptions,
   robustness2DOptions, robustness3DOptions, readStatusOptions,
@@ -145,6 +148,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:visible', 'created'])
+
+const isMobile = useMediaQuery('(max-width: 1023px)')
 
 // 表单状态
 const form = ref({})

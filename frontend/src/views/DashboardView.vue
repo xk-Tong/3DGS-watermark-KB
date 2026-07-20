@@ -32,7 +32,7 @@
           <span class="plate-note">By year</span>
         </div>
         <div class="plate-body">
-          <EChartsBase :option="timelineOption" height="280px" />
+          <EChartsBase :option="timelineOption" :height="ch('280px')" />
         </div>
       </div>
 
@@ -42,7 +42,7 @@
           <span class="plate-note">By task</span>
         </div>
         <div class="plate-body">
-          <EChartsBase :option="taskTypeOption" height="280px" />
+          <EChartsBase :option="taskTypeOption" :height="ch('280px')" />
         </div>
       </div>
 
@@ -52,7 +52,7 @@
           <span class="plate-note">Attribute</span>
         </div>
         <div class="plate-body">
-          <EChartsBase :option="attributeOption" height="280px" />
+          <EChartsBase :option="attributeOption" :height="ch('280px')" />
         </div>
       </div>
 
@@ -62,7 +62,7 @@
           <span class="plate-note">Injection</span>
         </div>
         <div class="plate-body">
-          <EChartsBase :option="injectionOption" height="280px" />
+          <EChartsBase :option="injectionOption" :height="ch('280px')" />
         </div>
       </div>
     </div>
@@ -74,7 +74,7 @@
         <span class="plate-note">Cross</span>
       </div>
       <div class="plate-body">
-        <EChartsBase :option="heatmapOption" height="320px" />
+        <EChartsBase :option="heatmapOption" :height="ch('320px')" />
       </div>
     </div>
 
@@ -85,7 +85,7 @@
         <span class="plate-note">Paper × Attack</span>
       </div>
       <div class="plate-body">
-        <EChartsBase :option="robustnessMatrixOption" height="500px" />
+        <EChartsBase :option="robustnessMatrixOption" :height="ch('500px', '300px')" />
       </div>
     </div>
   </div>
@@ -95,10 +95,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { statsApi } from '../api/stats'
 import { useTheme } from '../composables/useTheme'
+import { useMediaQuery } from '../composables/useMediaQuery'
 import EChartsBase from '../components/EChartsBase.vue'
 
 // 仪表盘用浅色主题——与整体设计一致（原为深色，经反馈改用浅色）
 useTheme('light')
+
+// 移动端 <768px 图表缩为 200px 高，避免占据整屏
+const isMobile = useMediaQuery('(max-width: 767px)')
+const ch = (desktop, mobile = '200px') => (isMobile.value ? mobile : desktop)
 
 // 统计数据
 const stats = ref({})
@@ -342,6 +347,9 @@ const robustnessMatrixOption = computed(() => {
   flex-direction: column;
   gap: var(--space-md);
 }
+@media (max-width: 639px) {
+  .dashboard-view { padding: var(--space-lg) var(--space-md); }
+}
 
 /* ===== 页头 ===== */
 .page-header {
@@ -354,7 +362,7 @@ const robustnessMatrixOption = computed(() => {
 }
 .page-title {
   font-family: var(--font-serif);
-  font-size: 32px;
+  font-size: clamp(1.5rem, 5vw, 32px);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.01em;

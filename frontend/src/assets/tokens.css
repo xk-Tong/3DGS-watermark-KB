@@ -36,6 +36,11 @@
   --transition-fast: 0.15s var(--ease-out);
   --transition: 0.25s var(--ease-out);
   --transition-slow: 0.5s var(--ease-out);
+
+  /* ---- 响应式断点（文档参考，@media 中以字面量使用，CSS 媒体查询不支持 var()） ---- */
+  --bp-md: 768px;   /* 平板竖屏 */
+  --bp-lg: 1024px;  /* 平板横屏 / 小笔电 */
+  --bp-xl: 1280px;  /* 标准桌面 */
 }
 
 /* ==========================================================================
@@ -364,6 +369,20 @@ a:hover {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ==========================================================================
+   响应式工具类（mobile-first 流体字号 + 按需隐藏）
+   .t-fs-* 在 320-1920px 间自然缩放
+   .hide-mobile / .hide-tablet-below 配合 @media 使用
+   ========================================================================== */
+.t-fs-title { font-size: clamp(1.25rem, 2.5vw, 1.5rem); }
+.t-fs-body  { font-size: clamp(13px, 1.6vw, 14px); }
+.t-fs-meta  { font-size: clamp(11px, 1.3vw, 12px); }
+.t-pad-x    { padding-inline: clamp(var(--space-md), 4vw, var(--space-lg)); }
+
+@media (max-width: 1023px) { .hide-tablet-below { display: none !important; } }
+@media (max-width: 767px)  { .hide-mobile      { display: none !important; } }
+@media (min-width: 1024px) { .show-mobile      { display: none !important; } }
 
 /* 尊重 reduced-motion */
 @media (prefers-reduced-motion: reduce) {
