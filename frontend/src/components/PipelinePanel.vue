@@ -128,6 +128,12 @@ function startPolling() {
     if (!status.value.running) {
       clearInterval(pollTimer)
       pollTimer = null
+      // 先判错误：整条流水线失败时（如 arXiv 连不上）saved 一定是 0，
+      // 不先拦一下就会误报"检索完成，无新论文"。
+      if (status.value.last_error) {
+        ElMessage.error('检索失败：' + status.value.last_error)
+        return
+      }
       const saved = status.value.last_result?.saved || 0
       if (saved > 0) {
         ElMessage.success(`检索完成，新增 ${saved} 篇论文`)

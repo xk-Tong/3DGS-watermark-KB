@@ -36,6 +36,16 @@ class settings:
     # 运行时 database.py 会自动创建 data/ 目录，不用手动建。
     db_path = BASE_DIR / "data" / "kb.db"
 
+    # arXiv API 专用代理。
+    # 部分服务器（如国内云主机）出网到 export.arxiv.org 会被中间设备 reset，
+    # 表现为 ConnectionResetError(104, 'Connection reset by peer')。
+    # 这种阻断是网络层的，换 https、加重试都没用，只能走代理。
+    # .env 里写：ARXIV_PROXY=http://127.0.0.1:7890
+    # 留空则直连（本地开发正常不需要配）。
+    # 注意：刻意只作用于 arXiv 请求，不写 HTTPS_PROXY——那会把 DeepSeek 调用也
+    # 一起绕进代理，国内直连 DeepSeek 反而更快更稳。
+    arxiv_proxy = os.environ.get("ARXIV_PROXY", "").strip()
+
     # CORS（跨域资源共享）允许的前端来源。
     # 从环境变量读，逗号分隔。本地开发不配则用默认值。
     # .env 里写：CORS_ORIGINS=http://localhost:5173  或  http://你的公网IP

@@ -18,8 +18,17 @@ from typing import Optional
 
 import requests
 
-# arXiv API 端点
-ARXIV_API_URL = "http://export.arxiv.org/api/query"
+from ..config import settings
+
+# arXiv API 端点。用 https——arXiv 官方推荐，明文 http 更容易被中间设备 reset。
+ARXIV_API_URL = "https://export.arxiv.org/api/query"
+
+# 请求头。arXiv 对无 UA 的请求不友好，带上一个明确的 UA。
+_USER_AGENT = "3DGS-KB/1.0 (personal research knowledge base)"
+
+# 单次请求超时（连接, 读取），单位秒。
+# 分成两个而不是一个 30：连接阶段卡住和读数据卡住是两回事，分开更好定位。
+_TIMEOUT = (10, 30)
 
 # Atom XML 的命名空间（Namespace）。
 # XML 命名空间类似 Python 的包名，避免不同 XML 格式的标签名冲突。
@@ -49,6 +58,71 @@ def _rate_limit():
         # time.sleep 是同步阻塞，会暂停当前线程——Phase 2 流水线跑在后台任务里，阻塞没关系。
         time.sleep(3.0 - elapsed)
     _last_request_time = time.time()
+
+
+def _proxies() -> Optional[dict]:
+    """
+    作用：返回 arXiv 请求要用的代理配置。
+
+    返回：{"http": ..., "https": ...}，未配置 ARXIV_PROXY 时返回 None。
+
+    使用场景：_request 内部调用。
+
+    设计要点：
+        只读 settings.arxiv_proxy，不用 HTTPS_PROXY 这类通用环境变量——
+        通用变量会连带把 DeepSeek 的调用也绕进代理，而 DeepSeek 国内直连即可。
+    """
+    if not settings.arxiv_proxy:
+        return None
+    return {"http": settings.arxiv_proxy, "https": settings.arxiv_proxy}
+
+
+def _request(params: dict, retries: int = 3) -> requests.Response:
+    """
+    作用：带重试地请求 arXiv API。
+
+    参数：
+        params：查询参数字典。
+        retries：最多尝试次数（含首次），默认 3。
+
+    返回：requests.Response（已 raise_for_status，2xx）。
+
+    异常：全部尝试都失败时抛 RuntimeError，错误信息里带最后一次的底层异常。
+
+    使用场景：search_papers / fetch_by_ids 内部调用。
+
+    设计要点：
+        1. 每次都先过 _rate_limit——重试也必须守 3 秒间隔，否则反而容易被封 IP。
+        2. 失败后退避 2s、4s，因为 reset 往往是瞬时的（对端限流、连接抖动）。
+        3. 三次全败基本可以断定是网络层被阻断，错误信息里直接给出代理配置提示，
+           免得又看到一句光秃秃的 ConnectionError 不知所措。
+    """
+    last_exc: Optional[Exception] = None
+
+    for attempt in range(1, retries + 1):
+        _rate_limit()
+        try:
+            resp = requests.get(
+                ARXIV_API_URL,
+                params=params,
+                headers={"User-Agent": _USER_AGENT},
+                proxies=_proxies(),
+                timeout=_TIMEOUT,
+            )
+            resp.raise_for_status()
+            return resp
+        except requests.RequestException as e:
+            # RequestException 是 requests 所有异常（连接失败/超时/4xx/5xx）的基类。
+            last_exc = e
+            if attempt < retries:
+                time.sleep(2 ** attempt)  # 第 1 次失败等 2s，第 2 次等 4s
+
+    hint = (
+        "（已配置 ARXIV_PROXY，请确认代理本身可用）"
+        if settings.arxiv_proxy
+        else "（服务器无法直连 arXiv 时，请在 backend/.env 配置 ARXIV_PROXY 指向可用代理）"
+    )
+    raise RuntimeError(f"arXiv API 请求失败，已重试 {retries} 次：{last_exc} {hint}")
 
 
 def _extract_arxiv_id(id_url: str) -> str:
@@ -190,8 +264,6 @@ def search_papers(
 
     使用场景：流水线 runner 调用，搜索 3DGS 水印相关新论文。
     """
-    _rate_limit()
-
     # 构造查询参数。
     params = {
         "search_query": query,
@@ -201,12 +273,8 @@ def search_papers(
         "sortOrder": sort_order,
     }
 
-    # requests.get：发起 HTTP GET 请求。
-    # timeout=30：30 秒超时，防止 arXiv 服务器卡住导致流水线挂死。
-    resp = requests.get(ARXIV_API_URL, params=params, timeout=30)
-    # raise_for_status()：HTTP 状态码 4xx/5xx 时抛异常，2xx 不抛。
-    # 这样调用方能用 try/except 捕获网络错误。
-    resp.raise_for_status()
+    # _request 内部已做限速 + 重试 + 超时 + 代理。
+    resp = _request(params)
 
     return _parse_atom(resp.text)
 
@@ -225,16 +293,13 @@ def fetch_by_ids(arxiv_ids: list[str]) -> list[dict]:
     if not arxiv_ids:
         return []
 
-    _rate_limit()
-
     # arXiv id_list API：用逗号分隔多个 id，一次请求拉多篇。
     params = {
         "id_list": ",".join(arxiv_ids),
         "max_results": len(arxiv_ids),
     }
 
-    resp = requests.get(ARXIV_API_URL, params=params, timeout=30)
-    resp.raise_for_status()
+    resp = _request(params)
 
     return _parse_atom(resp.text)
 

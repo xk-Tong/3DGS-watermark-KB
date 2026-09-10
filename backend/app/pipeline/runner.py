@@ -169,8 +169,15 @@ def run_pipeline(max_results: int = 50) -> dict:
 
     except Exception as e:
         # 整个流水线级别的错误（如 arXiv API 挂了、网络断了）
+        # 完整堆栈打到服务端日志（uvicorn 的 stderr），前端只要简短信息。
+        # 部署在服务器上排查时，去 `journalctl -u <服务名>` 或 uvicorn 日志里翻。
+        traceback.print_exc()
         PipelineStatus.last_error = f"{type(e).__name__}: {str(e)}"
-        PipelineStatus.last_error_traceback = traceback.format_exc()
+        # 失败时清掉上次的结果摘要——否则前端会拿着上一次成功运行的
+        # last_result 显示旧数据，看起来像"这次跑完了"。
+        PipelineStatus.last_result = None
+        # 失败也算一次运行结束，必须更新，否则前端"上次完成"显示的是陈旧时间。
+        PipelineStatus.last_finished_at = datetime.now(timezone.utc).isoformat()
         return {"error": str(e), "partial_result": result}
 
     finally:
